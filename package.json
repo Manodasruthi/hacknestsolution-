@@ -1,0 +1,12 @@
+{
+  "name": "hacknest-os",
+  "version": "1.0.0",
+  "description": "HackNest Solutions OS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
