@@ -140,24 +140,19 @@ setTimeout(showLogin, 2500);
 // Also try on page load
 window.addEventListener('load', function(){ setTimeout(showLogin, 500); });
 
-// Login button bridge - works even before module loads
+// Login button bridge - retries until module is ready
 document.addEventListener('DOMContentLoaded', function() {
-  var loginBtn = document.querySelector('.login-box .btn-primary');
-  var loginInput = document.getElementById('login-pass');
-  
   function tryLogin() {
     if(window.doLogin) {
       window.doLogin();
     } else {
-      // Module not loaded yet - show message
-      var err = document.getElementById('login-err');
-      if(err) { err.textContent = '⏳ Loading... please wait 2 seconds and try again!'; err.style.display='block'; }
-      setTimeout(function(){
-        if(err) err.style.display='none';
-      }, 2000);
+      // Retry after 300ms silently
+      setTimeout(tryLogin, 300);
     }
   }
   
+  var loginBtn = document.querySelector('.login-box .btn-primary');
+  var loginInput = document.getElementById('login-pass');
   if(loginBtn) loginBtn.onclick = tryLogin;
   if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
 });
