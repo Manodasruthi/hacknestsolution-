@@ -121,6 +121,25 @@
 </style>
 </head>
 <body>
+<!-- EMERGENCY BOOT FALLBACK - runs immediately, no module needed -->
+<script>
+window._bootDone = false;
+function showLogin() {
+  if(window._bootDone) return;
+  window._bootDone = true;
+  var boot = document.getElementById('boot-screen');
+  var login = document.getElementById('login-screen');
+  if(boot) { boot.style.opacity='0'; boot.style.transition='opacity 0.4s'; }
+  setTimeout(function(){
+    if(boot) boot.style.display='none';
+    if(login) login.style.display='flex';
+  }, 400);
+}
+// Force show login after 2.5 seconds NO MATTER WHAT
+setTimeout(showLogin, 2500);
+// Also try on page load
+window.addEventListener('load', function(){ setTimeout(showLogin, 500); });
+</script>
 
 <!-- BOOT -->
 <div id="boot-screen">
@@ -442,16 +461,8 @@ let allAttendance = {};
 let attendanceState = {};
 
 // Boot
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    const boot = document.getElementById('boot-screen');
-    boot.style.opacity = '0';
-    setTimeout(() => {
-      boot.style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
-    }, 600);
-  }, 2500);
-});
+// BOOT - calls global showLogin
+setTimeout(function(){ if(window.showLogin) window.showLogin(); }, 2000);
 
 // Clock
 setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
