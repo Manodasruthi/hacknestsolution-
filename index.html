@@ -139,6 +139,28 @@ function showLogin() {
 setTimeout(showLogin, 2500);
 // Also try on page load
 window.addEventListener('load', function(){ setTimeout(showLogin, 500); });
+
+// Login button bridge - works even before module loads
+document.addEventListener('DOMContentLoaded', function() {
+  var loginBtn = document.querySelector('.login-box .btn-primary');
+  var loginInput = document.getElementById('login-pass');
+  
+  function tryLogin() {
+    if(window.doLogin) {
+      window.doLogin();
+    } else {
+      // Module not loaded yet - show message
+      var err = document.getElementById('login-err');
+      if(err) { err.textContent = '⏳ Loading... please wait 2 seconds and try again!'; err.style.display='block'; }
+      setTimeout(function(){
+        if(err) err.style.display='none';
+      }, 2000);
+    }
+  }
+  
+  if(loginBtn) loginBtn.onclick = tryLogin;
+  if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+});
 </script>
 
 <!-- BOOT -->
@@ -418,9 +440,19 @@ window.addEventListener('load', function(){ setTimeout(showLogin, 500); });
 
 <div id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// Firebase compat mode - no imports needed, works as regular script
+const initializeApp = firebase.initializeApp.bind(firebase);
+function getDatabase(app) { return app.database(); }
+function ref(db, path) { return db.ref(path); }
+function push(r, data) { return r.push(data); }
+function onValue(r, cb) { r.on('value', snap => cb(snap)); return () => r.off('value'); }
+function remove(r) { return r.remove(); }
+function update(r, data) { return r.update(data); }
+function query(r, ...args) { return r; }
+function limitToLast(n) { return null; }
 
 const firebaseConfig = {
   apiKey: "AIzaSyBnuUgQC_Ae9kzyDJshTzyuehvXzci6eNM",
@@ -432,16 +464,17 @@ const firebaseConfig = {
   appId: "1:909664075648:web:a74b07d89f9b8a15928b65"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+// Using Firebase compat SDK directly
 
 const TEAM = {
-  'manoj':     {display:'Manoj',    init:'M',  isAdmin:true},
-  'bharani':   {display:'Bharani',  init:'B',  isAdmin:false},
-  'mansur':    {display:'Mansur',   init:'MS', isAdmin:false},
-  'jayasri':   {display:'Jayasri',  init:'J',  isAdmin:false},
-  'magalaxmi': {display:'Magalaxmi',init:'MG', isAdmin:false},
-  'ameerali':  {display:'Ameer Ali',init:'AA', isAdmin:false}
+  'manoj':     {display:'Manoj',    init:'M',  isAdmin:true,  pass:'Manoj@jjcet'},
+  'bharani':   {display:'Bharani',  init:'B',  isAdmin:false, pass:'bharani@HN2024'},
+  'mansur':    {display:'Mansur',   init:'MS', isAdmin:false, pass:'mansur@HN2024'},
+  'jayasri':   {display:'Jayasri',  init:'J',  isAdmin:false, pass:'jayasri@HN2024'},
+  'magalaxmi': {display:'Magalaxmi',init:'MG', isAdmin:false, pass:'magalaxmi@HN2024'},
+  'ameerali':  {display:'Ameer Ali',init:'AA', isAdmin:false, pass:'ameerali@HN2024'}
 };
 const TEAM_DATA = [
   {name:'Manoj',role:'CEO & Founder',init:'M'},
@@ -482,7 +515,7 @@ window.doLogin = function() {
   err.style.display = 'none';
   const member = TEAM[u];
   if (!member) { err.textContent = '⚠ Username not found!'; err.style.display = 'block'; return; }
-  if (p !== u + '@HN2024') { err.textContent = '⚠ Wrong password!'; err.style.display = 'block'; return; }
+  if (p !== member.pass) { err.textContent = '⚠ Wrong password!'; err.style.display = 'block'; return; }
   currentUser = member.display;
   currentInit = member.init;
   isAdmin = member.isAdmin || false;
@@ -517,15 +550,15 @@ function initOS() {
   initAttendanceMark();
   document.getElementById('bill-date').valueAsDate = new Date();
   document.getElementById('fin-date').valueAsDate = new Date();
-  onValue(ref(db,'bills'), snap => { const d=snap.val(); renderBills(d); updateDashboard(d); });
-  onValue(ref(db,'clients'), snap => renderClients(snap.val()));
-  onValue(ref(db,'projects'), snap => renderProjects(snap.val()));
-  onValue(ref(db,'tasks'), snap => renderTasks(snap.val()));
-  onValue(ref(db,'transactions'), snap => renderFinance(snap.val()));
-  onValue(ref(db,'stock'), snap => renderStock(snap.val()));
-  onValue(ref(db,'attendance'), snap => renderAttendance(snap.val()));
-  onValue(query(ref(db,'chat'), limitToLast(100)), snap => renderChat(snap.val()));
-  onValue(ref(db,'meta/billCounter'), snap => {
+  db.ref('bills').on('value', snap => { const d=snap.val(); renderBills(d); updateDashboard(d); });
+  db.ref('clients').on('value', snap => renderClients(snap.val()));
+  db.ref('projects').on('value', snap => renderProjects(snap.val()));
+  db.ref('tasks').on('value', snap => renderTasks(snap.val()));
+  db.ref('transactions').on('value', snap => renderFinance(snap.val()));
+  db.ref('stock').on('value', snap => renderStock(snap.val()));
+  db.ref('attendance').on('value', snap => renderAttendance(snap.val()));
+  onValue(query(ref('chat'), limitToLast(100)), snap => renderChat(snap.val()));
+  db.ref('meta/billCounter').on('value', snap => {
     billCounter = snap.val() || 1;
     document.getElementById('bill-no').value = 'HN-' + String(billCounter).padStart(3,'0');
   });
@@ -562,7 +595,7 @@ window.previewBill = function() {
 window.saveBill = async function() {
   const d=getBillData();
   if(!d.client||!d.amount||d.amount==='0'){window.toast('⚠ Enter client and amount!');return;}
-  try{await push(ref(db,'bills'),d);await update(ref(db,'meta'),{billCounter:billCounter+1});window.toast('✅ Bill saved!');window.clearBill();}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('bills').push(d); await db.ref('meta').update({billCounter:billCounter+1});window.toast('✅ Bill saved!');window.clearBill();}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.downloadBill = function() {
@@ -591,7 +624,7 @@ function renderBills(data) {
 window.addClient = async function() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){window.toast('⚠ Enter client name!');return;}
-  try{await push(ref(db,'clients'),{name,college:document.getElementById('c-college').value,phone:document.getElementById('c-phone').value,dept:document.getElementById('c-dept').value,by:currentUser,ts:Date.now()});['c-name','c-college','c-phone','c-dept'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Client added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('clients').push({name,college:document.getElementById('c-college').value,phone:document.getElementById('c-phone').value,dept:document.getElementById('c-dept').value,by:currentUser,ts:Date.now()});['c-name','c-college','c-phone','c-dept'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Client added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderClients(data) {
@@ -605,11 +638,11 @@ function renderClients(data) {
 window.addProject = async function() {
   const name=document.getElementById('p-name').value.trim();
   if(!name){window.toast('⚠ Enter project name!');return;}
-  try{await push(ref(db,'projects'),{name,client:document.getElementById('p-client-name').value,amount:document.getElementById('p-amt').value,deadline:document.getElementById('p-deadline').value,status:document.getElementById('p-status').value,assigned:document.getElementById('p-assigned').value,by:currentUser,ts:Date.now()});['p-name','p-client-name','p-amt'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Project added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('projects').push({name,client:document.getElementById('p-client-name').value,amount:document.getElementById('p-amt').value,deadline:document.getElementById('p-deadline').value,status:document.getElementById('p-status').value,assigned:document.getElementById('p-assigned').value,by:currentUser,ts:Date.now()});['p-name','p-client-name','p-amt'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Project added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.updateStatus = async function(key,val) {
-  try{await update(ref(db,'projects/'+key),{status:val});window.toast('Status updated!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('projects/'+key).update({status:val});window.toast('Status updated!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderProjects(data) {
@@ -627,7 +660,7 @@ function renderTeam() {
 window.assignTask = async function() {
   const task=document.getElementById('t-task').value.trim();
   if(!task){window.toast('⚠ Enter task!');return;}
-  try{await push(ref(db,'tasks'),{member:document.getElementById('t-member').value,task,by:currentUser,date:new Date().toLocaleDateString('en-IN'),ts:Date.now()});document.getElementById('t-task').value='';window.toast('✅ Task assigned!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('tasks').push({member:document.getElementById('t-member').value,task,by:currentUser,date:new Date().toLocaleDateString('en-IN'),ts:Date.now()});document.getElementById('t-task').value='';window.toast('✅ Task assigned!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderTasks(data) {
@@ -640,7 +673,7 @@ function renderTasks(data) {
 window.addTransaction = async function() {
   const amount=parseFloat(document.getElementById('fin-amount').value);
   if(!amount){window.toast('⚠ Enter amount!');return;}
-  try{await push(ref(db,'transactions'),{type:document.getElementById('fin-type').value,amount,desc:document.getElementById('fin-desc').value,date:document.getElementById('fin-date').value,by:currentUser,ts:Date.now()});['fin-amount','fin-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('fin-date').valueAsDate=new Date();window.toast('✅ Transaction saved!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('transactions').push({type:document.getElementById('fin-type').value,amount,desc:document.getElementById('fin-desc').value,date:document.getElementById('fin-date').value,by:currentUser,ts:Date.now()});['fin-amount','fin-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('fin-date').valueAsDate=new Date();window.toast('✅ Transaction saved!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderFinance(data) {
@@ -660,12 +693,12 @@ function renderFinance(data) {
 window.addStock = async function() {
   const name=document.getElementById('st-name').value.trim();
   if(!name){window.toast('⚠ Enter component name!');return;}
-  try{await push(ref(db,'stock'),{name,cat:document.getElementById('st-cat').value,qty:parseInt(document.getElementById('st-qty').value)||0,min:parseInt(document.getElementById('st-min').value)||1,price:parseFloat(document.getElementById('st-price').value)||0,by:currentUser,ts:Date.now()});['st-name','st-qty','st-min','st-price'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Component added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('stock').push({name,cat:document.getElementById('st-cat').value,qty:parseInt(document.getElementById('st-qty').value)||0,min:parseInt(document.getElementById('st-min').value)||1,price:parseFloat(document.getElementById('st-price').value)||0,by:currentUser,ts:Date.now()});['st-name','st-qty','st-min','st-price'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Component added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.useStock = async function(key,currentQty) {
   if(currentQty<=0){window.toast('⚠ Out of stock!');return;}
-  try{await update(ref(db,'stock/'+key),{qty:currentQty-1});window.toast('✅ Used 1 unit!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('stock/'+key).update({qty:currentQty-1});window.toast('✅ Used 1 unit!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderStock(data) {
@@ -698,7 +731,7 @@ window.setAtt = function(member,status) {
 
 window.submitAttendance = async function() {
   const today=new Date().toLocaleDateString('en-IN');
-  try{for(const m of MEMBERS) await push(ref(db,'attendance'),{member:m,status:attendanceState[m]||'present',date:today,by:currentUser,ts:Date.now()});window.toast('✅ Attendance submitted!');}catch(e){window.toast('❌ '+e.message);}
+  try{for(const m of MEMBERS) await db.ref('attendance').push({member:m,status:attendanceState[m]||'present',date:today,by:currentUser,ts:Date.now()});window.toast('✅ Attendance submitted!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.filterAttendance = function() { renderAttendanceData(allAttendance); };
@@ -719,7 +752,7 @@ window.sendChat = async function() {
   const input=document.getElementById('chat-input');
   const msg=input.value.trim();
   if(!msg) return;
-  try{await push(ref(db,'chat'),{text:msg,by:currentUser,init:currentInit,time:new Date().toLocaleTimeString('en-IN'),ts:Date.now()});input.value='';}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('chat').push({text:msg,by:currentUser,init:currentInit,time:new Date().toLocaleTimeString('en-IN'),ts:Date.now()});input.value='';}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderChat(data) {
@@ -734,7 +767,7 @@ function renderChat(data) {
 
 // Delete
 window.delItem = async function(path,key) {
-  try{await remove(ref(db,path+'/'+key));window.toast('Deleted!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref(path+'/'+key).remove();window.toast('Deleted!');}catch(e){window.toast('❌ '+e.message);}
 };
 </script>
 </body>
