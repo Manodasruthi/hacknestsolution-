@@ -121,41 +121,65 @@
 </style>
 </head>
 <body>
-<!-- EMERGENCY BOOT FALLBACK - runs immediately, no module needed -->
+<!-- BOOT + LOGIN - Pure inline script, no Firebase needed for login -->
 <script>
+// ── TEAM CREDENTIALS ──
+var TEAM = {
+  'manoj':     {display:'Manoj',    init:'M',  isAdmin:true,  pass:'Manoj@jjcet'},
+  'bharani':   {display:'Bharani',  init:'B',  isAdmin:false, pass:'bharani@HN2024'},
+  'mansur':    {display:'Mansur',   init:'MS', isAdmin:false, pass:'mansur@HN2024'},
+  'jayasri':   {display:'Jayasri',  init:'J',  isAdmin:false, pass:'jayasri@HN2024'},
+  'magalaxmi': {display:'Magalaxmi',init:'MG', isAdmin:false, pass:'magalaxmi@HN2024'},
+  'ameerali':  {display:'Ameer Ali',init:'AA', isAdmin:false, pass:'ameerali@HN2024'}
+};
+window.currentUser = null;
+window.currentInit = '';
+window.isAdmin = false;
+
+// ── BOOT ──
 window._bootDone = false;
 function showLogin() {
   if(window._bootDone) return;
   window._bootDone = true;
   var boot = document.getElementById('boot-screen');
   var login = document.getElementById('login-screen');
-  if(boot) { boot.style.opacity='0'; boot.style.transition='opacity 0.4s'; }
+  if(boot) { boot.style.opacity='0'; boot.style.transition='opacity 0.5s'; }
   setTimeout(function(){
     if(boot) boot.style.display='none';
     if(login) login.style.display='flex';
-  }, 400);
+  }, 500);
 }
-// Force show login after 2.5 seconds NO MATTER WHAT
 setTimeout(showLogin, 2500);
-// Also try on page load
-window.addEventListener('load', function(){ setTimeout(showLogin, 500); });
+window.addEventListener('load', function(){ setTimeout(showLogin, 800); });
 
-// Login button bridge - retries until module is ready
-document.addEventListener('DOMContentLoaded', function() {
-  function tryLogin() {
-    if(window.doLogin) {
-      window.doLogin();
-    } else {
-      // Retry after 300ms silently
-      setTimeout(tryLogin, 300);
-    }
-  }
-  
-  var loginBtn = document.querySelector('.login-box .btn-primary');
-  var loginInput = document.getElementById('login-pass');
-  if(loginBtn) loginBtn.onclick = tryLogin;
-  if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
-});
+// ── LOGIN - works immediately, no Firebase needed ──
+window.doLogin = function() {
+  var u = document.getElementById('login-user').value.trim().toLowerCase().replace(/\s/g,'');
+  var p = document.getElementById('login-pass').value;
+  var err = document.getElementById('login-err');
+  err.style.display = 'none';
+  var member = TEAM[u];
+  if(!member) { err.textContent = '⚠ Username not found!'; err.style.display='block'; return; }
+  if(p !== member.pass) { err.textContent = '⚠ Wrong password!'; err.style.display='block'; return; }
+  window.currentUser = member.display;
+  window.currentInit = member.init;
+  window.isAdmin = member.isAdmin || false;
+  document.getElementById('current-user-display').textContent = window.currentUser + (window.isAdmin ? ' 👑' : '');
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('os-main').style.display = 'block';
+  if(window.initOS) { window.initOS(); }
+  setTimeout(function(){ if(window.autoMarkAttendance) window.autoMarkAttendance(); }, 1000);
+  if(window.toast) window.toast('✅ Welcome, ' + window.currentUser + (window.isAdmin ? ' 👑' : '') + '!');
+};
+
+// ── LOGOUT ──
+window.doLogout = function() {
+  window.currentUser = null;
+  document.getElementById('os-main').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+};
 </script>
 
 <!-- BOOT -->
@@ -463,14 +487,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 // Using Firebase compat SDK directly
 
-const TEAM = {
-  'manoj':     {display:'Manoj',    init:'M',  isAdmin:true,  pass:'Manoj@jjcet'},
-  'bharani':   {display:'Bharani',  init:'B',  isAdmin:false, pass:'bharani@HN2024'},
-  'mansur':    {display:'Mansur',   init:'MS', isAdmin:false, pass:'mansur@HN2024'},
-  'jayasri':   {display:'Jayasri',  init:'J',  isAdmin:false, pass:'jayasri@HN2024'},
-  'magalaxmi': {display:'Magalaxmi',init:'MG', isAdmin:false, pass:'magalaxmi@HN2024'},
-  'ameerali':  {display:'Ameer Ali',init:'AA', isAdmin:false, pass:'ameerali@HN2024'}
-};
+// TEAM defined in inline script above
 const TEAM_DATA = [
   {name:'Manoj',role:'CEO & Founder',init:'M'},
   {name:'Bharani',role:'Co-Founder & L&D',init:'B'},
@@ -481,9 +498,7 @@ const TEAM_DATA = [
 ];
 const MEMBERS = ['Manoj','Bharani','Mansur','Jayasri','Magalaxmi','Ameer Ali'];
 
-let currentUser = null;
-let currentInit = 'M';
-let isAdmin = false;
+// window.currentUser, window.currentInit, window.isAdmin defined in inline script
 let billCounter = 1;
 let allAttendance = {};
 let attendanceState = {};
@@ -508,22 +523,22 @@ window.doLogin = function() {
   const p = document.getElementById('login-pass').value;
   const err = document.getElementById('login-err');
   err.style.display = 'none';
-  const member = TEAM[u];
+  const member = window.TEAM ? window.TEAM[u] : null;
   if (!member) { err.textContent = '⚠ Username not found!'; err.style.display = 'block'; return; }
   if (p !== member.pass) { err.textContent = '⚠ Wrong password!'; err.style.display = 'block'; return; }
-  currentUser = member.display;
-  currentInit = member.init;
-  isAdmin = member.isAdmin || false;
-  document.getElementById('current-user-display').textContent = currentUser + (isAdmin ? ' 👑' : '');
+  window.currentUser = member.display;
+  window.currentInit = member.init;
+  window.isAdmin = member.isAdmin || false;
+  document.getElementById('current-user-display').textContent = window.currentUser + (window.isAdmin ? ' 👑' : '');
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('os-main').style.display = 'block';
   initOS();
   autoMarkAttendance();
-  window.toast('✅ Welcome, ' + currentUser + (isAdmin ? ' 👑' : '') + '!');
+  window.toast('✅ Welcome, ' + window.currentUser + (window.isAdmin ? ' 👑' : '') + '!');
 };
 
 window.doLogout = function() {
-  currentUser = null;
+  window.currentUser = null;
   document.getElementById('os-main').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-user').value = '';
@@ -540,7 +555,7 @@ window.switchTab = function(id, el) {
 };
 
 // Init OS
-function initOS() {
+window.initOS = function() {
   renderTeam();
   initAttendanceMark();
   document.getElementById('bill-date').valueAsDate = new Date();
@@ -578,7 +593,7 @@ window.calcBill = function() {
 };
 
 function getBillData() {
-  return {no:document.getElementById('bill-no').value||'HN-001',date:document.getElementById('bill-date').value,client:document.getElementById('bill-client').value,phone:document.getElementById('bill-phone').value,desc:document.getElementById('bill-desc').value,amount:document.getElementById('bill-amount').value||'0',cost:document.getElementById('bill-cost').value||'0',profit:document.getElementById('bill-profit').value||'0',notes:document.getElementById('bill-notes').value,by:currentUser,ts:Date.now()};
+  return {no:document.getElementById('bill-no').value||'HN-001',date:document.getElementById('bill-date').value,client:document.getElementById('bill-client').value,phone:document.getElementById('bill-phone').value,desc:document.getElementById('bill-desc').value,amount:document.getElementById('bill-amount').value||'0',cost:document.getElementById('bill-cost').value||'0',profit:document.getElementById('bill-profit').value||'0',notes:document.getElementById('bill-notes').value,by:window.currentUser,ts:Date.now()};
 }
 
 window.previewBill = function() {
@@ -612,28 +627,28 @@ window.clearBill = function() {
 function renderBills(data) {
   const tbody=document.getElementById('bill-history'); const empty=document.getElementById('bill-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(([key,b])=>`<tr><td><span style="color:var(--teal);font-family:'Share Tech Mono',monospace">${b.no}</span></td><td>${b.client}</td><td style="color:var(--text-dim)">${b.desc}</td><td style="color:var(--teal)">₹${b.amount}</td><td><span class="badge badge-purple">${b.by||'—'}</span></td><td style="color:var(--text-dim)">${b.date}</td><td>${(isAdmin||b.by===currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'bills\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  tbody.innerHTML=Object.entries(data).reverse().map(([key,b])=>`<tr><td><span style="color:var(--teal);font-family:'Share Tech Mono',monospace">${b.no}</span></td><td>${b.client}</td><td style="color:var(--text-dim)">${b.desc}</td><td style="color:var(--teal)">₹${b.amount}</td><td><span class="badge badge-purple">${b.by||'—'}</span></td><td style="color:var(--text-dim)">${b.date}</td><td>${(window.isAdmin||b.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'bills\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
 }
 
 // Clients
 window.addClient = async function() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){window.toast('⚠ Enter client name!');return;}
-  try{await db.ref('clients').push({name,college:document.getElementById('c-college').value,phone:document.getElementById('c-phone').value,dept:document.getElementById('c-dept').value,by:currentUser,ts:Date.now()});['c-name','c-college','c-phone','c-dept'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Client added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('clients').push({name,college:document.getElementById('c-college').value,phone:document.getElementById('c-phone').value,dept:document.getElementById('c-dept').value,by:window.currentUser,ts:Date.now()});['c-name','c-college','c-phone','c-dept'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Client added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderClients(data) {
   const tbody=document.getElementById('client-list'); const empty=document.getElementById('client-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
   document.getElementById('d-clients').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(([key,c],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${c.name}</strong></td><td style="color:var(--text-dim)">${c.college||'—'}</td><td><span class="badge badge-purple">${c.dept||'—'}</span></td><td style="color:var(--text-dim)">${c.phone||'—'}</td><td><span class="badge badge-green">${c.by||'—'}</span></td><td>${(isAdmin||c.by===currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'clients\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  tbody.innerHTML=Object.entries(data).map(([key,c],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${c.name}</strong></td><td style="color:var(--text-dim)">${c.college||'—'}</td><td><span class="badge badge-purple">${c.dept||'—'}</span></td><td style="color:var(--text-dim)">${c.phone||'—'}</td><td><span class="badge badge-green">${c.by||'—'}</span></td><td>${(window.isAdmin||c.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'clients\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
 }
 
 // Projects
 window.addProject = async function() {
   const name=document.getElementById('p-name').value.trim();
   if(!name){window.toast('⚠ Enter project name!');return;}
-  try{await db.ref('projects').push({name,client:document.getElementById('p-client-name').value,amount:document.getElementById('p-amt').value,deadline:document.getElementById('p-deadline').value,status:document.getElementById('p-status').value,assigned:document.getElementById('p-assigned').value,by:currentUser,ts:Date.now()});['p-name','p-client-name','p-amt'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Project added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('projects').push({name,client:document.getElementById('p-client-name').value,amount:document.getElementById('p-amt').value,deadline:document.getElementById('p-deadline').value,status:document.getElementById('p-status').value,assigned:document.getElementById('p-assigned').value,by:window.currentUser,ts:Date.now()});['p-name','p-client-name','p-amt'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Project added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.updateStatus = async function(key,val) {
@@ -644,7 +659,7 @@ function renderProjects(data) {
   const tbody=document.getElementById('project-list'); const empty=document.getElementById('project-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
   document.getElementById('d-projects').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(([key,p],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${p.name}</strong></td><td style="color:var(--text-dim)">${p.client}</td><td style="color:var(--teal)">₹${p.amount}</td><td><span class="badge badge-purple">${p.assigned}</span></td><td style="color:var(--text-dim)">${p.deadline||'—'}</td><td>${(isAdmin||p.by===currentUser)?`<select class="btn btn-ghost btn-sm" onchange="updateStatus('${key}',this.value)" style="padding:0.25rem 0.5rem"><option value="pending" ${p.status==='pending'?'selected':''}>Pending</option><option value="ongoing" ${p.status==='ongoing'?'selected':''}>Ongoing</option><option value="completed" ${p.status==='completed'?'selected':''}>Completed</option></select>`:`<span class="badge ${p.status==='completed'?'badge-green':p.status==='ongoing'?'badge-yellow':'badge-red'}">${p.status}</span>`}</td><td>${(isAdmin||p.by===currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'projects\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  tbody.innerHTML=Object.entries(data).map(([key,p],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${p.name}</strong></td><td style="color:var(--text-dim)">${p.client}</td><td style="color:var(--teal)">₹${p.amount}</td><td><span class="badge badge-purple">${p.assigned}</span></td><td style="color:var(--text-dim)">${p.deadline||'—'}</td><td>${(window.isAdmin||p.by===window.currentUser)?`<select class="btn btn-ghost btn-sm" onchange="updateStatus('${key}',this.value)" style="padding:0.25rem 0.5rem"><option value="pending" ${p.status==='pending'?'selected':''}>Pending</option><option value="ongoing" ${p.status==='ongoing'?'selected':''}>Ongoing</option><option value="completed" ${p.status==='completed'?'selected':''}>Completed</option></select>`:`<span class="badge ${p.status==='completed'?'badge-green':p.status==='ongoing'?'badge-yellow':'badge-red'}">${p.status}</span>`}</td><td>${(window.isAdmin||p.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'projects\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
 }
 
 // Team
@@ -655,20 +670,20 @@ function renderTeam() {
 window.assignTask = async function() {
   const task=document.getElementById('t-task').value.trim();
   if(!task){window.toast('⚠ Enter task!');return;}
-  try{await db.ref('tasks').push({member:document.getElementById('t-member').value,task,by:currentUser,date:new Date().toLocaleDateString('en-IN'),ts:Date.now()});document.getElementById('t-task').value='';window.toast('✅ Task assigned!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('tasks').push({member:document.getElementById('t-member').value,task,by:window.currentUser,date:new Date().toLocaleDateString('en-IN'),ts:Date.now()});document.getElementById('t-task').value='';window.toast('✅ Task assigned!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderTasks(data) {
   const tbody=document.getElementById('task-list'); const empty=document.getElementById('task-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).map(([key,t])=>`<tr><td><span class="badge badge-purple">${t.member}</span></td><td>${t.task}</td><td><span class="badge badge-green">${t.by||'—'}</span></td><td style="color:var(--text-dim)">${t.date}</td><td>${(isAdmin||t.by===currentUser)?'<button class=\"btn btn-ghost btn-sm\" onclick=\"delItem(\\'tasks\\',\\''+key+'\\')\"">✓ Done</button>':'<span style=\"color:var(--text-dim)\">—</span>'}</td></tr>`).join('');
+  tbody.innerHTML=Object.entries(data).map(([key,t])=>`<tr><td><span class="badge badge-purple">${t.member}</span></td><td>${t.task}</td><td><span class="badge badge-green">${t.by||'—'}</span></td><td style="color:var(--text-dim)">${t.date}</td><td>${(window.isAdmin||t.by===window.currentUser)?'<button class=\"btn btn-ghost btn-sm\" onclick=\"delItem(\\'tasks\\',\\''+key+'\\')\"">✓ Done</button>':'<span style=\"color:var(--text-dim)\">—</span>'}</td></tr>`).join('');
 }
 
 // Finance
 window.addTransaction = async function() {
   const amount=parseFloat(document.getElementById('fin-amount').value);
   if(!amount){window.toast('⚠ Enter amount!');return;}
-  try{await db.ref('transactions').push({type:document.getElementById('fin-type').value,amount,desc:document.getElementById('fin-desc').value,date:document.getElementById('fin-date').value,by:currentUser,ts:Date.now()});['fin-amount','fin-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('fin-date').valueAsDate=new Date();window.toast('✅ Transaction saved!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('transactions').push({type:document.getElementById('fin-type').value,amount,desc:document.getElementById('fin-desc').value,date:document.getElementById('fin-date').value,by:window.currentUser,ts:Date.now()});['fin-amount','fin-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('fin-date').valueAsDate=new Date();window.toast('✅ Transaction saved!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderFinance(data) {
@@ -681,14 +696,14 @@ function renderFinance(data) {
   document.getElementById('f-expense').textContent='₹'+expense.toLocaleString('en-IN');
   const balEl=document.getElementById('f-balance'); balEl.textContent='₹'+balance.toLocaleString('en-IN'); balEl.style.color=balance>=0?'var(--teal)':'#ef4444';
   if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(([key,t])=>`<tr><td style="color:var(--text-dim)">${t.date}</td><td><span class="badge ${t.type==='income'?'badge-green':'badge-red'}">${t.type}</span></td><td>${t.desc}</td><td style="color:${t.type==='income'?'var(--teal)':'#ef4444'};font-weight:700">${t.type==='income'?'+':'-'}₹${t.amount.toLocaleString('en-IN')}</td><td><span class="badge badge-purple">${t.by||'—'}</span></td><td>${(isAdmin||t.by===currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'transactions\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  tbody.innerHTML=Object.entries(data).reverse().map(([key,t])=>`<tr><td style="color:var(--text-dim)">${t.date}</td><td><span class="badge ${t.type==='income'?'badge-green':'badge-red'}">${t.type}</span></td><td>${t.desc}</td><td style="color:${t.type==='income'?'var(--teal)':'#ef4444'};font-weight:700">${t.type==='income'?'+':'-'}₹${t.amount.toLocaleString('en-IN')}</td><td><span class="badge badge-purple">${t.by||'—'}</span></td><td>${(window.isAdmin||t.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'transactions\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
 }
 
 // Stock
 window.addStock = async function() {
   const name=document.getElementById('st-name').value.trim();
   if(!name){window.toast('⚠ Enter component name!');return;}
-  try{await db.ref('stock').push({name,cat:document.getElementById('st-cat').value,qty:parseInt(document.getElementById('st-qty').value)||0,min:parseInt(document.getElementById('st-min').value)||1,price:parseFloat(document.getElementById('st-price').value)||0,by:currentUser,ts:Date.now()});['st-name','st-qty','st-min','st-price'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Component added!');}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('stock').push({name,cat:document.getElementById('st-cat').value,qty:parseInt(document.getElementById('st-qty').value)||0,min:parseInt(document.getElementById('st-min').value)||1,price:parseFloat(document.getElementById('st-price').value)||0,by:window.currentUser,ts:Date.now()});['st-name','st-qty','st-min','st-price'].forEach(id=>document.getElementById(id).value='');window.toast('✅ Component added!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.useStock = async function(key,currentQty) {
@@ -702,7 +717,7 @@ function renderStock(data) {
   tbody.innerHTML=Object.entries(data).map(([key,s],i)=>{
     const outof=s.qty===0; const low=s.qty<=s.min&&!outof;
     const badge=outof?'badge-red">OUT':low?'badge-yellow">LOW':'badge-green">OK';
-    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${s.name}</strong></td><td><span class="badge badge-purple">${s.cat}</span></td><td style="color:${outof?'#ef4444':low?'#eab308':'var(--teal)'};font-weight:700">${s.qty}</td><td style="color:var(--text-dim)">${s.min}</td><td style="color:var(--text-dim)">₹${s.price}</td><td style="color:var(--teal)">₹${(s.qty*s.price).toLocaleString('en-IN')}</td><td><span class="badge ${badge}</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock('${key}',${s.qty})">-1 Use</button></td><td>${(isAdmin||s.by===currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'stock\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${s.name}</strong></td><td><span class="badge badge-purple">${s.cat}</span></td><td style="color:${outof?'#ef4444':low?'#eab308':'var(--teal)'};font-weight:700">${s.qty}</td><td style="color:var(--text-dim)">${s.min}</td><td style="color:var(--text-dim)">₹${s.price}</td><td style="color:var(--teal)">₹${(s.qty*s.price).toLocaleString('en-IN')}</td><td><span class="badge ${badge}</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock('${key}',${s.qty})">-1 Use</button></td><td>${(window.isAdmin||s.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'stock\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`;
   }).join('');
 }
 
@@ -726,7 +741,7 @@ window.setAtt = function(member,status) {
 
 window.submitAttendance = async function() {
   const today=new Date().toLocaleDateString('en-IN');
-  try{for(const m of MEMBERS) await db.ref('attendance').push({member:m,status:attendanceState[m]||'present',date:today,by:currentUser,ts:Date.now()});window.toast('✅ Attendance submitted!');}catch(e){window.toast('❌ '+e.message);}
+  try{for(const m of MEMBERS) await db.ref('attendance').push({member:m,status:attendanceState[m]||'present',date:today,by:window.currentUser,ts:Date.now()});window.toast('✅ Attendance submitted!');}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.filterAttendance = function() { renderAttendanceData(allAttendance); };
@@ -747,14 +762,14 @@ window.sendChat = async function() {
   const input=document.getElementById('chat-input');
   const msg=input.value.trim();
   if(!msg) return;
-  try{await db.ref('chat').push({text:msg,by:currentUser,init:currentInit,time:new Date().toLocaleTimeString('en-IN'),ts:Date.now()});input.value='';}catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('chat').push({text:msg,by:window.currentUser,init:window.currentInit,time:new Date().toLocaleTimeString('en-IN'),ts:Date.now()});input.value='';}catch(e){window.toast('❌ '+e.message);}
 };
 
 function renderChat(data) {
   const box=document.getElementById('chat-box');
   if(!data){box.innerHTML='<div class="empty-state"><span class="empty-icon">💬</span>No messages yet. Say hi! 👋</div>';return;}
   box.innerHTML=Object.values(data).map(m=>{
-    const mine=m.by===currentUser;
+    const mine=m.by===window.currentUser;
     return `<div class="chat-msg ${mine?'mine':''}"><div class="chat-avatar">${m.init||m.by.substring(0,2).toUpperCase()}</div><div class="chat-bubble"><div class="chat-name">${m.by}</div><div class="chat-text">${m.text}</div><div class="chat-time">${m.time||''}</div></div></div>`;
   }).join('');
   box.scrollTop=box.scrollHeight;
