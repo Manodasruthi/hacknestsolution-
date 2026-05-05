@@ -121,9 +121,7 @@
 </style>
 </head>
 <body>
-<!-- BOOT + LOGIN - Pure inline script, no Firebase needed for login -->
 <script>
-// ── TEAM CREDENTIALS ──
 var TEAM = {
   'manoj':     {display:'Manoj',    init:'M',  isAdmin:true,  pass:'Manoj@jjcet'},
   'bharani':   {display:'Bharani',  init:'B',  isAdmin:false, pass:'bharani@HN2024'},
@@ -136,7 +134,6 @@ window.currentUser = null;
 window.currentInit = '';
 window.isAdmin = false;
 
-// ── BOOT ──
 window._bootDone = false;
 function showLogin() {
   if(window._bootDone) return;
@@ -152,7 +149,6 @@ function showLogin() {
 setTimeout(showLogin, 2500);
 window.addEventListener('load', function(){ setTimeout(showLogin, 800); });
 
-// ── LOGIN - works immediately, no Firebase needed ──
 window.doLogin = function() {
   var u = document.getElementById('login-user').value.trim().toLowerCase().replace(/\s/g,'');
   var p = document.getElementById('login-pass').value;
@@ -172,17 +168,57 @@ window.doLogin = function() {
   if(window.toast) window.toast('✅ Welcome, ' + window.currentUser + (window.isAdmin ? ' 👑' : '') + '!');
 };
 
-// ── LOGOUT ──
 window.doLogout = function() {
   window.currentUser = null;
+  window.isAdmin = false;
   document.getElementById('os-main').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
 };
+
+window.toast = function(msg) {
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+};
+
+var _queue = {};
+var _fbReady = false;
+var _proxyFuncs = ['addClient','addProject','addStock','addTransaction',
+  'assignTask','clearBill','delItem','downloadBill','previewBill',
+  'saveBill','sendChat','submitAttendance','useStock','calcBill',
+  'setAtt','filterAttendance','updateStatus'];
+
+_proxyFuncs.forEach(function(fn) {
+  window[fn] = function() {
+    var args = arguments;
+    if(_fbReady && window['_real_'+fn]) {
+      window['_real_'+fn].apply(null, args);
+    } else {
+      setTimeout(function(){ window[fn].apply(null, args); }, 200);
+    }
+  };
+});
+
+window._markFbReady = function() {
+  _fbReady = true;
+  _proxyFuncs.forEach(function(fn) {
+    if(window['_real_'+fn]) window[fn] = window['_real_'+fn];
+  });
+};
+
+window.switchTab = function(id, el) {
+  document.querySelectorAll('.module').forEach(function(m){ m.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  var mod = document.getElementById('mod-'+id);
+  if(mod) mod.classList.add('active');
+  if(el) el.classList.add('active');
+};
 </script>
 
-<!-- BOOT -->
 <div id="boot-screen">
   <div class="boot-logo"><span>Hack</span><span>Nest</span></div>
   <div class="boot-tagline">INNOVATE · SECURE · DELIVER</div>
@@ -190,7 +226,6 @@ window.doLogout = function() {
   <div class="boot-status" id="boot-status">Starting HackNest OS...</div>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="grid-bg"></div>
   <div class="login-box">
@@ -210,7 +245,6 @@ window.doLogout = function() {
   </div>
 </div>
 
-<!-- MAIN OS -->
 <div id="os-main">
   <div class="grid-bg"></div>
   <div class="topbar">
@@ -236,8 +270,6 @@ window.doLogout = function() {
   </div>
 
   <div class="content">
-
-    <!-- DASHBOARD -->
     <div class="module active" id="mod-dashboard">
       <div class="module-header"><div class="module-icon">📊</div><div><div class="module-title">DASHBOARD</div><div class="module-sub">HackNest Solutions · Live Overview</div></div></div>
       <div class="cards-grid">
@@ -263,7 +295,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- BILL ENTRY -->
     <div class="module" id="mod-bill">
       <div class="module-header"><div class="module-icon">🧾</div><div><div class="module-title">BILL ENTRY</div><div class="module-sub">Create & download invoices</div></div></div>
       <div class="panel">
@@ -305,7 +336,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- CLIENTS -->
     <div class="module" id="mod-clients">
       <div class="module-header"><div class="module-icon">👥</div><div><div class="module-title">CLIENT MANAGER</div><div class="module-sub">Track your clients</div></div></div>
       <div class="panel">
@@ -327,7 +357,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- PROJECTS -->
     <div class="module" id="mod-projects">
       <div class="module-header"><div class="module-icon">🔧</div><div><div class="module-title">PROJECT TRACKER</div><div class="module-sub">IoT Projects · Live Shared</div></div></div>
       <div class="panel">
@@ -351,7 +380,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- TEAM -->
     <div class="module" id="mod-team">
       <div class="module-header"><div class="module-icon">👨‍💼</div><div><div class="module-title">TEAM MANAGER</div><div class="module-sub">HackNest Solutions · 6 Members</div></div></div>
       <div class="team-grid" id="team-grid"></div>
@@ -370,7 +398,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- FINANCE -->
     <div class="module" id="mod-finance">
       <div class="module-header"><div class="module-icon">💰</div><div><div class="module-title">FINANCE</div><div class="module-sub">Income & Expense · Live Shared</div></div></div>
       <div class="cards-grid">
@@ -395,7 +422,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- STOCK -->
     <div class="module" id="mod-stock">
       <div class="module-header"><div class="module-icon">📦</div><div><div class="module-title">STOCK TRACKER</div><div class="module-sub">IoT Components · Live Shared</div></div></div>
       <div class="panel">
@@ -418,7 +444,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- ATTENDANCE -->
     <div class="module" id="mod-attendance">
       <div class="module-header"><div class="module-icon">📅</div><div><div class="module-title">ATTENDANCE</div><div class="module-sub">Daily Attendance · Live Shared</div></div></div>
       <div class="panel">
@@ -441,7 +466,6 @@ window.doLogout = function() {
       </div>
     </div>
 
-    <!-- CHAT -->
     <div class="module" id="mod-chat">
       <div class="module-header"><div class="module-icon">💬</div><div><div class="module-title">TEAM CHAT</div><div class="module-sub">HackNest Internal Chat · Live</div></div></div>
       <div class="panel">
@@ -462,7 +486,6 @@ window.doLogout = function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
-// Firebase compat mode - no imports needed, works as regular script
 const initializeApp = firebase.initializeApp.bind(firebase);
 function getDatabase(app) { return app.database(); }
 function ref(db, path) { return db.ref(path); }
@@ -485,9 +508,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-// Using Firebase compat SDK directly
 
-// TEAM defined in inline script above
 const TEAM_DATA = [
   {name:'Manoj',role:'CEO & Founder',init:'M'},
   {name:'Bharani',role:'Co-Founder & L&D',init:'B'},
@@ -498,63 +519,27 @@ const TEAM_DATA = [
 ];
 const MEMBERS = ['Manoj','Bharani','Mansur','Jayasri','Magalaxmi','Ameer Ali'];
 
-// window.currentUser, window.currentInit, window.isAdmin defined in inline script
 let billCounter = 1;
 let allAttendance = {};
-let attendanceState = {};
 
-// Boot
-// BOOT - calls global showLogin
 setTimeout(function(){ if(window.showLogin) window.showLogin(); }, 2000);
-
-// Clock
 setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
 
-// Toast
-window.toast = function(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+// --- NEW HELPER FUNCTIONS ---
+window.canEdit = function(author) {
+  return window.isAdmin || author === window.currentUser;
 };
 
-// Login
-window.doLogin = function() {
-  const u = document.getElementById('login-user').value.trim().toLowerCase().replace(/\s/g,'');
-  const p = document.getElementById('login-pass').value;
-  const err = document.getElementById('login-err');
-  err.style.display = 'none';
-  const member = window.TEAM ? window.TEAM[u] : null;
-  if (!member) { err.textContent = '⚠ Username not found!'; err.style.display = 'block'; return; }
-  if (p !== member.pass) { err.textContent = '⚠ Wrong password!'; err.style.display = 'block'; return; }
-  window.currentUser = member.display;
-  window.currentInit = member.init;
-  window.isAdmin = member.isAdmin || false;
-  document.getElementById('current-user-display').textContent = window.currentUser + (window.isAdmin ? ' 👑' : '');
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('os-main').style.display = 'block';
-  initOS();
-  autoMarkAttendance();
-  window.toast('✅ Welcome, ' + window.currentUser + (window.isAdmin ? ' 👑' : '') + '!');
+window.delItem = async function(path, key) {
+  if(!confirm('Are you sure you want to delete this?')) return;
+  try {
+    await db.ref(path + '/' + key).remove();
+    window.toast('✅ Item deleted successfully!');
+  } catch(e) {
+    window.toast('❌ Error: ' + e.message);
+  }
 };
 
-window.doLogout = function() {
-  window.currentUser = null;
-  document.getElementById('os-main').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-};
-
-// Tab Switch
-window.switchTab = function(id, el) {
-  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('mod-' + id).classList.add('active');
-  if (el) el.classList.add('active');
-  else document.querySelectorAll('.nav-tab').forEach(t => { if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + id + "'")) t.classList.add('active'); });
-};
-
-// Init OS
 window.initOS = function() {
   renderTeam();
   initAttendanceMark();
@@ -567,14 +552,13 @@ window.initOS = function() {
   db.ref('transactions').on('value', snap => renderFinance(snap.val()));
   db.ref('stock').on('value', snap => renderStock(snap.val()));
   db.ref('attendance').on('value', snap => renderAttendance(snap.val()));
-  onValue(query(ref('chat'), limitToLast(100)), snap => renderChat(snap.val()));
+  onValue(query(ref(db, 'chat')), snap => renderChat(snap.val())); // Fixed chat listener
   db.ref('meta/billCounter').on('value', snap => {
     billCounter = snap.val() || 1;
     document.getElementById('bill-no').value = 'HN-' + String(billCounter).padStart(3,'0');
   });
 }
 
-// Dashboard
 function updateDashboard(bills) {
   const arr = bills ? Object.values(bills) : [];
   document.getElementById('d-bills').textContent = arr.length;
@@ -585,7 +569,6 @@ function updateDashboard(bills) {
   ra.innerHTML = recent.length ? recent.map(b=>`<div style="padding:0.5rem 0;border-bottom:1px solid rgba(45,226,182,0.05);font-size:0.85rem;display:flex;justify-content:space-between;gap:1rem"><span>🧾 ${b.no} — ${b.client} — ₹${b.amount}</span><span style="color:var(--text-dim);font-size:0.75rem">${b.by} · ${b.date}</span></div>`).join('') : '<div class="empty-state"><span class="empty-icon">📡</span>No activity yet!</div>';
 }
 
-// Bill
 window.calcBill = function() {
   const a=parseFloat(document.getElementById('bill-amount').value)||0;
   const c=parseFloat(document.getElementById('bill-cost').value)||0;
@@ -625,12 +608,18 @@ window.clearBill = function() {
 };
 
 function renderBills(data) {
-  const tbody=document.getElementById('bill-history'); const empty=document.getElementById('bill-empty');
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(([key,b])=>`<tr><td><span style="color:var(--teal);font-family:'Share Tech Mono',monospace">${b.no}</span></td><td>${b.client}</td><td style="color:var(--text-dim)">${b.desc}</td><td style="color:var(--teal)">₹${b.amount}</td><td><span class="badge badge-purple">${b.by||'—'}</span></td><td style="color:var(--text-dim)">${b.date}</td><td>${(window.isAdmin||b.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'bills\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  var tbody = document.getElementById('bill-history');
+  var empty = document.getElementById('bill-empty');
+  if(!data){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML = Object.entries(data).reverse().map(([key, b]) => {
+    var delCell = window.canEdit(b.by)
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('bills','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td><span style="color:var(--teal);font-family:Share Tech Mono,monospace">${b.no}</span></td><td>${b.client}</td><td style="color:var(--text-dim)">${b.desc}</td><td style="color:var(--teal)">₹${b.amount}</td><td><span class="badge badge-purple">${b.by||'—'}</span></td><td style="color:var(--text-dim)">${b.date}</td><td>${delCell}</td></tr>`;
+  }).join('');
 }
 
-// Clients
 window.addClient = async function() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){window.toast('⚠ Enter client name!');return;}
@@ -638,13 +627,19 @@ window.addClient = async function() {
 };
 
 function renderClients(data) {
-  const tbody=document.getElementById('client-list'); const empty=document.getElementById('client-empty');
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  document.getElementById('d-clients').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(([key,c],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${c.name}</strong></td><td style="color:var(--text-dim)">${c.college||'—'}</td><td><span class="badge badge-purple">${c.dept||'—'}</span></td><td style="color:var(--text-dim)">${c.phone||'—'}</td><td><span class="badge badge-green">${c.by||'—'}</span></td><td>${(window.isAdmin||c.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'clients\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  var tbody = document.getElementById('client-list');
+  var empty = document.getElementById('client-empty');
+  if(!data){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  document.getElementById('d-clients').textContent = Object.keys(data).length;
+  tbody.innerHTML = Object.entries(data).map(([key, c], i) => {
+    var delCell = window.canEdit(c.by)
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('clients','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${c.name}</strong></td><td style="color:var(--text-dim)">${c.college||'—'}</td><td><span class="badge badge-purple">${c.dept||'—'}</span></td><td style="color:var(--text-dim)">${c.phone||'—'}</td><td><span class="badge badge-green">${c.by||'—'}</span></td><td>${delCell}</td></tr>`;
+  }).join('');
 }
 
-// Projects
 window.addProject = async function() {
   const name=document.getElementById('p-name').value.trim();
   if(!name){window.toast('⚠ Enter project name!');return;}
@@ -656,13 +651,23 @@ window.updateStatus = async function(key,val) {
 };
 
 function renderProjects(data) {
-  const tbody=document.getElementById('project-list'); const empty=document.getElementById('project-empty');
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  document.getElementById('d-projects').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(([key,p],i)=>`<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${p.name}</strong></td><td style="color:var(--text-dim)">${p.client}</td><td style="color:var(--teal)">₹${p.amount}</td><td><span class="badge badge-purple">${p.assigned}</span></td><td style="color:var(--text-dim)">${p.deadline||'—'}</td><td>${(window.isAdmin||p.by===window.currentUser)?`<select class="btn btn-ghost btn-sm" onchange="updateStatus('${key}',this.value)" style="padding:0.25rem 0.5rem"><option value="pending" ${p.status==='pending'?'selected':''}>Pending</option><option value="ongoing" ${p.status==='ongoing'?'selected':''}>Ongoing</option><option value="completed" ${p.status==='completed'?'selected':''}>Completed</option></select>`:`<span class="badge ${p.status==='completed'?'badge-green':p.status==='ongoing'?'badge-yellow':'badge-red'}">${p.status}</span>`}</td><td>${(window.isAdmin||p.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'projects\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  var tbody = document.getElementById('project-list');
+  var empty = document.getElementById('project-empty');
+  if(!data){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  document.getElementById('d-projects').textContent = Object.keys(data).length;
+  tbody.innerHTML = Object.entries(data).map(([key, p], i) => {
+    var statusBadge = p.status==='completed'?'badge-green':p.status==='ongoing'?'badge-yellow':'badge-red';
+    var statusCell = window.canEdit(p.by)
+      ? `<select class="btn btn-ghost btn-sm" onchange="updateStatus('${key}',this.value)" style="padding:0.25rem 0.5rem"><option value="pending"${p.status==='pending'?' selected':''}>Pending</option><option value="ongoing"${p.status==='ongoing'?' selected':''}>Ongoing</option><option value="completed"${p.status==='completed'?' selected':''}>Completed</option></select>`
+      : `<span class="badge ${statusBadge}">${p.status}</span>`;
+    var delCell = window.canEdit(p.by)
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('projects','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${p.name}</strong></td><td style="color:var(--text-dim)">${p.client}</td><td style="color:var(--teal)">₹${p.amount}</td><td><span class="badge badge-purple">${p.assigned}</span></td><td style="color:var(--text-dim)">${p.deadline||'—'}</td><td>${statusCell}</td><td>${delCell}</td></tr>`;
+  }).join('');
 }
 
-// Team
 function renderTeam() {
   document.getElementById('team-grid').innerHTML=TEAM_DATA.map(m=>`<div class="team-card"><div class="team-avatar">${m.init}</div><div class="team-name">${m.name}</div><div class="team-role">${m.role}</div><div style="margin-top:0.5rem"><span class="badge badge-green">Active</span></div></div>`).join('');
 }
@@ -674,12 +679,18 @@ window.assignTask = async function() {
 };
 
 function renderTasks(data) {
-  const tbody=document.getElementById('task-list'); const empty=document.getElementById('task-empty');
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).map(([key,t])=>`<tr><td><span class="badge badge-purple">${t.member}</span></td><td>${t.task}</td><td><span class="badge badge-green">${t.by||'—'}</span></td><td style="color:var(--text-dim)">${t.date}</td><td>${(window.isAdmin||t.by===window.currentUser)?'<button class=\"btn btn-ghost btn-sm\" onclick=\"delItem(\\'tasks\\',\\''+key+'\\')\"">✓ Done</button>':'<span style=\"color:var(--text-dim)\">—</span>'}</td></tr>`).join('');
+  var tbody = document.getElementById('task-list');
+  var empty = document.getElementById('task-empty');
+  if(!data){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML = Object.entries(data).map(([key, t]) => {
+    var doneCell = window.canEdit(t.by)
+      ? `<button class="btn btn-ghost btn-sm" onclick="delItem('tasks','${key}')">✓ Done</button>`
+      : `<span style="color:var(--text-dim)">—</span>`;
+    return `<tr><td><span class="badge badge-purple">${t.member}</span></td><td>${t.task}</td><td><span class="badge badge-green">${t.by||'—'}</span></td><td style="color:var(--text-dim)">${t.date}</td><td>${doneCell}</td></tr>`;
+  }).join('');
 }
 
-// Finance
 window.addTransaction = async function() {
   const amount=parseFloat(document.getElementById('fin-amount').value);
   if(!amount){window.toast('⚠ Enter amount!');return;}
@@ -687,19 +698,29 @@ window.addTransaction = async function() {
 };
 
 function renderFinance(data) {
-  const tbody=document.getElementById('finance-list'); const empty=document.getElementById('finance-empty');
-  const arr=data?Object.values(data):[];
-  const income=arr.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expense=arr.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance=income-expense;
+  var tbody = document.getElementById('finance-list');
+  var empty = document.getElementById('finance-empty');
+  var arr = data ? Object.values(data) : [];
+  var income = arr.filter(t => t.type==='income').reduce((s,t) => s+t.amount,0);
+  var expense = arr.filter(t => t.type==='expense').reduce((s,t) => s+t.amount,0);
+  var balance = income-expense;
   document.getElementById('f-income').textContent='₹'+income.toLocaleString('en-IN');
   document.getElementById('f-expense').textContent='₹'+expense.toLocaleString('en-IN');
-  const balEl=document.getElementById('f-balance'); balEl.textContent='₹'+balance.toLocaleString('en-IN'); balEl.style.color=balance>=0?'var(--teal)':'#ef4444';
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(([key,t])=>`<tr><td style="color:var(--text-dim)">${t.date}</td><td><span class="badge ${t.type==='income'?'badge-green':'badge-red'}">${t.type}</span></td><td>${t.desc}</td><td style="color:${t.type==='income'?'var(--teal)':'#ef4444'};font-weight:700">${t.type==='income'?'+':'-'}₹${t.amount.toLocaleString('en-IN')}</td><td><span class="badge badge-purple">${t.by||'—'}</span></td><td>${(window.isAdmin||t.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'transactions\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`).join('');
+  var balEl = document.getElementById('f-balance');
+  balEl.textContent='₹'+balance.toLocaleString('en-IN');
+  balEl.style.color = balance>=0?'var(--teal)':'#ef4444';
+  if(!data){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML = Object.entries(data).reverse().map(([key, t]) => {
+    var delCell = window.canEdit(t.by)
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('transactions','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    var amtColor = t.type==='income'?'var(--teal)':'#ef4444';
+    var sign = t.type==='income'?'+':'-';
+    return `<tr><td style="color:var(--text-dim)">${t.date}</td><td><span class="badge ${t.type==='income'?'badge-green':'badge-red'}">${t.type}</span></td><td>${t.desc}</td><td style="color:${amtColor};font-weight:700">${sign}₹${t.amount.toLocaleString('en-IN')}</td><td><span class="badge badge-purple">${t.by||'—'}</span></td><td>${delCell}</td></tr>`;
+  }).join('');
 }
 
-// Stock
 window.addStock = async function() {
   const name=document.getElementById('st-name').value.trim();
   if(!name){window.toast('⚠ Enter component name!');return;}
@@ -712,73 +733,119 @@ window.useStock = async function(key,currentQty) {
 };
 
 function renderStock(data) {
-  const tbody=document.getElementById('stock-list'); const empty=document.getElementById('stock-empty');
-  if(!data){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).map(([key,s],i)=>{
-    const outof=s.qty===0; const low=s.qty<=s.min&&!outof;
-    const badge=outof?'badge-red">OUT':low?'badge-yellow">LOW':'badge-green">OK';
-    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${s.name}</strong></td><td><span class="badge badge-purple">${s.cat}</span></td><td style="color:${outof?'#ef4444':low?'#eab308':'var(--teal)'};font-weight:700">${s.qty}</td><td style="color:var(--text-dim)">${s.min}</td><td style="color:var(--text-dim)">₹${s.price}</td><td style="color:var(--teal)">₹${(s.qty*s.price).toLocaleString('en-IN')}</td><td><span class="badge ${badge}</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock('${key}',${s.qty})">-1 Use</button></td><td>${(window.isAdmin||s.by===window.currentUser)?'<button class=\"btn btn-danger btn-sm\" onclick=\"delItem(\\'stock\\',\\''+key+'\\')\"">✕</button>':'<span style=\"color:var(--text-dim);font-size:0.75rem\">👁 View</span>'}</td></tr>`;
-  }).join('');
-}
-
-// Attendance
-function initAttendanceMark() {
-  MEMBERS.forEach(m=>attendanceState[m]='present');
-  document.getElementById('attendance-mark-grid').innerHTML=MEMBERS.map(m=>{
-    const k=m.replace(' ','-');
-    return `<div class="panel" style="margin-bottom:0;text-align:center"><div style="font-weight:700;margin-bottom:0.75rem">${m}</div><div style="display:flex;gap:0.5rem;justify-content:center"><button class="btn btn-primary btn-sm" id="abtn-${k}-p" onclick="setAtt('${m}','present')">✅ Present</button><button class="btn btn-ghost btn-sm" id="abtn-${k}-a" onclick="setAtt('${m}','absent')">❌ Absent</button></div></div>`;
-  }).join('');
-}
-
-window.setAtt = function(member,status) {
-  attendanceState[member]=status;
-  const k=member.replace(' ','-');
-  const pBtn=document.getElementById('abtn-'+k+'-p');
-  const aBtn=document.getElementById('abtn-'+k+'-a');
-  if(status==='present'){pBtn.className='btn btn-primary btn-sm';aBtn.className='btn btn-ghost btn-sm';}
-  else{pBtn.className='btn btn-ghost btn-sm';aBtn.className='btn btn-danger btn-sm';}
-};
-
-window.submitAttendance = async function() {
-  const today=new Date().toLocaleDateString('en-IN');
-  try{for(const m of MEMBERS) await db.ref('attendance').push({member:m,status:attendanceState[m]||'present',date:today,by:window.currentUser,ts:Date.now()});window.toast('✅ Attendance submitted!');}catch(e){window.toast('❌ '+e.message);}
-};
-
-window.filterAttendance = function() { renderAttendanceData(allAttendance); };
-
-function renderAttendanceData(data) {
-  const tbody=document.getElementById('attendance-list'); const empty=document.getElementById('attendance-empty');
-  const filter=document.getElementById('att-filter').value;
+  var tbody = document.getElementById('stock-list');
+  var empty = document.getElementById('stock-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
-  const entries=Object.entries(data).reverse().filter(([k,v])=>filter==='all'||v.member===filter);
-  if(!entries.length){tbody.innerHTML='';empty.style.display='block';return;} empty.style.display='none';
-  tbody.innerHTML=entries.map(([key,a])=>`<tr><td style="color:var(--text-dim)">${a.date}</td><td><span class="badge badge-purple">${a.member}</span></td><td><span class="badge ${a.status==='present'?'badge-green':'badge-red'}">${a.status}</span></td><td style="color:var(--text-dim)">${a.by||'—'}</td></tr>`).join('');
+  empty.style.display='none';
+  tbody.innerHTML = Object.entries(data).map(([key, s], i) => {
+    var total = (s.qty*s.price).toLocaleString('en-IN');
+    var low = s.qty<=s.min; var outof=s.qty===0;
+    var statusClass = outof?'badge-red':low?'badge-yellow':'badge-green';
+    var statusText = outof?'OUT OF STOCK':low?'LOW STOCK':'IN STOCK';
+    var qtyColor = outof?'#ef4444':low?'#eab308':'var(--teal)';
+    var delCell = window.canEdit(s.by)
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('stock','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${s.name}</strong></td><td><span class="badge badge-purple">${s.cat}</span></td><td style="color:${qtyColor};font-weight:700">${s.qty}</td><td style="color:var(--text-dim)">${s.min}</td><td style="color:var(--text-dim)">₹${s.price}</td><td style="color:var(--teal)">₹${total}</td><td><span class="badge ${statusClass}">${statusText}</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock('${key}',${s.qty})">-1 Use</button></td><td>${delCell}</td></tr>`;
+  }).join('');
 }
 
-function renderAttendance(data) { allAttendance=data; renderAttendanceData(data); }
-
-// Chat
+// --- NEW CHAT FUNCTIONS ---
 window.sendChat = async function() {
-  const input=document.getElementById('chat-input');
-  const msg=input.value.trim();
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
   if(!msg) return;
-  try{await db.ref('chat').push({text:msg,by:window.currentUser,init:window.currentInit,time:new Date().toLocaleTimeString('en-IN'),ts:Date.now()});input.value='';}catch(e){window.toast('❌ '+e.message);}
+  try {
+    await db.ref('chat').push({
+      user: window.currentUser,
+      init: window.currentInit,
+      msg: msg,
+      time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'}),
+      ts: Date.now()
+    });
+    input.value = '';
+  } catch(e) { window.toast('❌ ' + e.message); }
 };
 
 function renderChat(data) {
-  const box=document.getElementById('chat-box');
-  if(!data){box.innerHTML='<div class="empty-state"><span class="empty-icon">💬</span>No messages yet. Say hi! 👋</div>';return;}
-  box.innerHTML=Object.values(data).map(m=>{
-    const mine=m.by===window.currentUser;
-    return `<div class="chat-msg ${mine?'mine':''}"><div class="chat-avatar">${m.init||m.by.substring(0,2).toUpperCase()}</div><div class="chat-bubble"><div class="chat-name">${m.by}</div><div class="chat-text">${m.text}</div><div class="chat-time">${m.time||''}</div></div></div>`;
+  const box = document.getElementById('chat-box');
+  if(!data) { box.innerHTML = '<div class="empty-state"><span class="empty-icon">💬</span>No messages yet. Say hi! 👋</div>'; return; }
+  box.innerHTML = Object.values(data).map(c => {
+    const isMine = c.user === window.currentUser;
+    return `<div class="chat-msg ${isMine ? 'mine' : ''}">
+      <div class="chat-avatar">${c.init}</div>
+      <div>
+        <div class="chat-name">${c.user}</div>
+        <div class="chat-bubble"><div class="chat-text">${c.msg}</div></div>
+        <div class="chat-time">${c.time}</div>
+      </div>
+    </div>`;
   }).join('');
-  box.scrollTop=box.scrollHeight;
+  box.scrollTop = box.scrollHeight;
 }
 
-// Delete
-window.delItem = async function(path,key) {
-  try{await db.ref(path+'/'+key).remove();window.toast('Deleted!');}catch(e){window.toast('❌ '+e.message);}
+// --- NEW ATTENDANCE FUNCTIONS ---
+function initAttendanceMark() {
+  const grid = document.getElementById('attendance-mark-grid');
+  grid.innerHTML = MEMBERS.map(m => `
+    <div style="background:var(--glass);padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border)">
+      <div style="font-weight:700;margin-bottom:0.5rem">${m}</div>
+      <select id="att-mark-${m.replace(/\s+/g, '')}" style="padding:0.25rem;font-size:0.8rem;width:100%">
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+        <option value="Leave">Leave</option>
+      </select>
+    </div>
+  `).join('');
+}
+
+window.submitAttendance = async function() {
+  const date = new Date().toLocaleDateString('en-IN');
+  const updates = {};
+  MEMBERS.forEach(m => {
+    const val = document.getElementById('att-mark-' + m.replace(/\s+/g, '')).value;
+    const key = date.replace(/\//g,'-') + '-' + m.replace(/\s+/g, '');
+    updates[key] = { date, member: m, status: val, by: window.currentUser, ts: Date.now() };
+  });
+  try {
+    await db.ref('attendance').update(updates);
+    window.toast('✅ Attendance saved!');
+  } catch(e) { window.toast('❌ ' + e.message); }
 };
+
+function renderAttendance(data) {
+  allAttendance = data || {};
+  filterAttendance();
+}
+
+window.filterAttendance = function() {
+  const tbody = document.getElementById('attendance-list');
+  const empty = document.getElementById('attendance-empty');
+  const filter = document.getElementById('att-filter').value;
+  
+  if(!allAttendance || Object.keys(allAttendance).length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  let arr = Object.values(allAttendance).sort((a,b) => b.ts - a.ts);
+  if(filter !== 'all') {
+    arr = arr.filter(a => a.member === filter);
+  }
+  
+  tbody.innerHTML = arr.map(a => {
+    const statusClass = a.status === 'Present' ? 'badge-green' : a.status === 'Absent' ? 'badge-red' : 'badge-yellow';
+    return `<tr>
+      <td style="color:var(--text-dim)">${a.date}</td>
+      <td><strong>${a.member}</strong></td>
+      <td><span class="badge ${statusClass}">${a.status}</span></td>
+      <td><span class="badge badge-purple">${a.by}</span></td>
+    </tr>`;
+  }).join('');
+};
+
 </script>
 </body>
 </html>
