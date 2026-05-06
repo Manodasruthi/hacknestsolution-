@@ -121,9 +121,7 @@
 </style>
 </head>
 <body>
-<!-- BOOT + LOGIN - Pure inline script, no Firebase needed for login -->
 <script>
-// ── TEAM CREDENTIALS ──
 var TEAM = {
   'manoj':     {display:'Manoj',    init:'M',  isAdmin:true,  pass:'Manoj@jjcet'},
   'bharani':   {display:'Bharani',  init:'B',  isAdmin:false, pass:'bharani@HN2024'},
@@ -136,7 +134,6 @@ window.currentUser = null;
 window.currentInit = '';
 window.isAdmin = false;
 
-// ── BOOT ──
 window._bootDone = false;
 function showLogin() {
   if(window._bootDone) return;
@@ -152,7 +149,6 @@ function showLogin() {
 setTimeout(showLogin, 2500);
 window.addEventListener('load', function(){ setTimeout(showLogin, 800); });
 
-// ── LOGIN - works immediately, no Firebase needed ──
 window.doLogin = function() {
   var u = document.getElementById('login-user').value.trim().toLowerCase().replace(/\s/g,'');
   var p = document.getElementById('login-pass').value;
@@ -172,7 +168,6 @@ window.doLogin = function() {
   if(window.toast) window.toast('✅ Welcome, ' + window.currentUser + (window.isAdmin ? ' 👑' : '') + '!');
 };
 
-// ── LOGOUT ──
 window.doLogout = function() {
   window.currentUser = null;
   window.isAdmin = false;
@@ -182,7 +177,6 @@ window.doLogout = function() {
   document.getElementById('login-pass').value = '';
 };
 
-// ── TOAST - defined early so login can use it ──
 window.toast = function(msg) {
   var t = document.getElementById('toast');
   if(!t) return;
@@ -191,14 +185,12 @@ window.toast = function(msg) {
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 };
 
-
-// ── FUNCTION PROXY - queues calls until Firebase script loads ──
 var _queue = {};
 var _fbReady = false;
 var _proxyFuncs = ['addClient','addProject','addStock','addTransaction',
   'assignTask','clearBill','delItem','downloadBill','previewBill',
   'saveBill','sendChat','submitAttendance','useStock','calcBill',
-  'setAtt','filterAttendance','updateStatus','downloadSavedBill','editBill'];
+  'setAtt','filterAttendance','updateStatus'];
 
 _proxyFuncs.forEach(function(fn) {
   window[fn] = function() {
@@ -218,7 +210,6 @@ window._markFbReady = function() {
   });
 };
 
-// ── TAB SWITCH ──
 window.switchTab = function(id, el) {
   document.querySelectorAll('.module').forEach(function(m){ m.classList.remove('active'); });
   document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
@@ -226,12 +217,8 @@ window.switchTab = function(id, el) {
   if(mod) mod.classList.add('active');
   if(el) el.classList.add('active');
 };
-
-// ── LOGOUT ──
-// doLogout handled in inline script above
 </script>
 
-<!-- BOOT -->
 <div id="boot-screen">
   <div class="boot-logo"><span>Hack</span><span>Nest</span></div>
   <div class="boot-tagline">INNOVATE · SECURE · DELIVER</div>
@@ -239,7 +226,6 @@ window.switchTab = function(id, el) {
   <div class="boot-status" id="boot-status">Starting HackNest OS...</div>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="grid-bg"></div>
   <div class="login-box">
@@ -259,7 +245,6 @@ window.switchTab = function(id, el) {
   </div>
 </div>
 
-<!-- MAIN OS -->
 <div id="os-main">
   <div class="grid-bg"></div>
   <div class="topbar">
@@ -280,13 +265,11 @@ window.switchTab = function(id, el) {
     <button class="nav-tab" onclick="switchTab('team',this)">👨‍💼 Team</button>
     <button class="nav-tab" onclick="switchTab('finance',this)">💰 Finance</button>
     <button class="nav-tab" onclick="switchTab('stock',this)">📦 Stock</button>
-    <button class="nav-tab" id="att-nav-tab" onclick="switchTab('attendance',this)" style="display:none">📅 Attendance</button>
+    <button class="nav-tab" onclick="switchTab('attendance',this)">📅 Attendance</button>
     <button class="nav-tab" onclick="switchTab('chat',this)">💬 Chat</button>
   </div>
 
   <div class="content">
-
-    <!-- DASHBOARD -->
     <div class="module active" id="mod-dashboard">
       <div class="module-header"><div class="module-icon">📊</div><div><div class="module-title">DASHBOARD</div><div class="module-sub">HackNest Solutions · Live Overview</div></div></div>
       <div class="cards-grid">
@@ -312,7 +295,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- BILL ENTRY -->
     <div class="module" id="mod-bill">
       <div class="module-header"><div class="module-icon">🧾</div><div><div class="module-title">BILL ENTRY</div><div class="module-sub">Create & download invoices</div></div></div>
       <div class="panel">
@@ -354,7 +336,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- CLIENTS -->
     <div class="module" id="mod-clients">
       <div class="module-header"><div class="module-icon">👥</div><div><div class="module-title">CLIENT MANAGER</div><div class="module-sub">Track your clients</div></div></div>
       <div class="panel">
@@ -376,7 +357,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- PROJECTS -->
     <div class="module" id="mod-projects">
       <div class="module-header"><div class="module-icon">🔧</div><div><div class="module-title">PROJECT TRACKER</div><div class="module-sub">IoT Projects · Live Shared</div></div></div>
       <div class="panel">
@@ -400,7 +380,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- TEAM -->
     <div class="module" id="mod-team">
       <div class="module-header"><div class="module-icon">👨‍💼</div><div><div class="module-title">TEAM MANAGER</div><div class="module-sub">HackNest Solutions · 6 Members</div></div></div>
       <div class="team-grid" id="team-grid"></div>
@@ -419,7 +398,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- FINANCE -->
     <div class="module" id="mod-finance">
       <div class="module-header"><div class="module-icon">💰</div><div><div class="module-title">FINANCE</div><div class="module-sub">Income & Expense · Live Shared</div></div></div>
       <div class="cards-grid">
@@ -444,7 +422,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- STOCK -->
     <div class="module" id="mod-stock">
       <div class="module-header"><div class="module-icon">📦</div><div><div class="module-title">STOCK TRACKER</div><div class="module-sub">IoT Components · Live Shared</div></div></div>
       <div class="panel">
@@ -467,7 +444,6 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- ATTENDANCE -->
     <div class="module" id="mod-attendance">
       <div class="module-header"><div class="module-icon">📅</div><div><div class="module-title">ATTENDANCE</div><div class="module-sub">Daily Attendance · Live Shared</div></div></div>
       <div class="panel">
@@ -490,15 +466,14 @@ window.switchTab = function(id, el) {
       </div>
     </div>
 
-    <!-- CHAT -->
     <div class="module" id="mod-chat">
       <div class="module-header"><div class="module-icon">💬</div><div><div class="module-title">TEAM CHAT</div><div class="module-sub">HackNest Internal Chat · Live</div></div></div>
       <div class="panel">
         <div class="panel-title">Chat Room <span style="color:var(--teal)">· Live</span></div>
         <div class="chat-box" id="chat-box"><div class="empty-state"><span class="empty-icon">💬</span>No messages yet. Say hi! 👋</div></div>
         <div class="chat-input-row">
-          <textarea id="chat-input" placeholder="Type a message..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}" style="resize:none;flex:1;padding:0.75rem;font-size:1rem;min-height:48px;line-height:1.5"></textarea>
-          <button class="btn btn-primary" onclick="sendChat()" style="align-self:flex-end">Send 🚀</button>
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="btn btn-primary" onclick="sendChat()">Send 🚀</button>
         </div>
       </div>
     </div>
@@ -511,7 +486,6 @@ window.switchTab = function(id, el) {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
-// Firebase compat mode - no imports needed, works as regular script
 const initializeApp = firebase.initializeApp.bind(firebase);
 function getDatabase(app) { return app.database(); }
 function ref(db, path) { return db.ref(path); }
@@ -534,9 +508,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-// Using Firebase compat SDK directly
 
-// TEAM defined in inline script above
 const TEAM_DATA = [
   {name:'Manoj',role:'CEO & Founder',init:'M'},
   {name:'Bharani',role:'Co-Founder & L&D',init:'B'},
@@ -547,31 +519,28 @@ const TEAM_DATA = [
 ];
 const MEMBERS = ['Manoj','Bharani','Mansur','Jayasri','Magalaxmi','Ameer Ali'];
 
-// window.currentUser, window.currentInit, window.isAdmin defined in inline script
 let billCounter = 1;
 let allAttendance = {};
-let attendanceState = {};
 
-// Boot
-// BOOT - calls global showLogin
 setTimeout(function(){ if(window.showLogin) window.showLogin(); }, 2000);
-
-// Clock
 setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
 
-// Toast
-// toast in inline script
-// Login
-// doLogin handled in inline script above
-// doLogout handled in inline script above
+// --- NEW HELPER FUNCTIONS ---
+window.canEdit = function(author) {
+  return window.isAdmin || author === window.currentUser;
+};
 
-// Tab Switch
-// switchTab in inline script
-// Init OS
+window.delItem = async function(path, key) {
+  if(!confirm('Are you sure you want to delete this?')) return;
+  try {
+    await db.ref(path + '/' + key).remove();
+    window.toast('✅ Item deleted successfully!');
+  } catch(e) {
+    window.toast('❌ Error: ' + e.message);
+  }
+};
+
 window.initOS = function() {
-  // Show attendance tab only for Manoj
-  var attTab = document.getElementById('att-nav-tab');
-  if(attTab) attTab.style.display = window.isAdmin ? 'flex' : 'none';
   renderTeam();
   initAttendanceMark();
   document.getElementById('bill-date').valueAsDate = new Date();
@@ -583,14 +552,13 @@ window.initOS = function() {
   db.ref('transactions').on('value', snap => renderFinance(snap.val()));
   db.ref('stock').on('value', snap => renderStock(snap.val()));
   db.ref('attendance').on('value', snap => renderAttendance(snap.val()));
-  onValue(query(ref('chat'), limitToLast(100)), snap => renderChat(snap.val()));
+  onValue(query(ref(db, 'chat')), snap => renderChat(snap.val())); // Fixed chat listener
   db.ref('meta/billCounter').on('value', snap => {
     billCounter = snap.val() || 1;
     document.getElementById('bill-no').value = 'HN-' + String(billCounter).padStart(3,'0');
   });
 }
 
-// Dashboard
 function updateDashboard(bills) {
   const arr = bills ? Object.values(bills) : [];
   document.getElementById('d-bills').textContent = arr.length;
@@ -601,7 +569,6 @@ function updateDashboard(bills) {
   ra.innerHTML = recent.length ? recent.map(b=>`<div style="padding:0.5rem 0;border-bottom:1px solid rgba(45,226,182,0.05);font-size:0.85rem;display:flex;justify-content:space-between;gap:1rem"><span>🧾 ${b.no} — ${b.client} — ₹${b.amount}</span><span style="color:var(--text-dim);font-size:0.75rem">${b.by} · ${b.date}</span></div>`).join('') : '<div class="empty-state"><span class="empty-icon">📡</span>No activity yet!</div>';
 }
 
-// Bill
 window.calcBill = function() {
   const a=parseFloat(document.getElementById('bill-amount').value)||0;
   const c=parseFloat(document.getElementById('bill-cost').value)||0;
@@ -621,19 +588,7 @@ window.previewBill = function() {
 window.saveBill = async function() {
   const d=getBillData();
   if(!d.client||!d.amount||d.amount==='0'){window.toast('⚠ Enter client and amount!');return;}
-  try{
-    await db.ref('bills').push(d);
-    await db.ref('meta').update({billCounter:billCounter+1});
-    // AUTO ADD CLIENT
-    if(d.client) {
-      const snap = await db.ref('clients').once('value');
-      const clients = snap.val() || {};
-      const exists = Object.values(clients).some(c => c.name && c.name.toLowerCase()===d.client.toLowerCase());
-      if(!exists) await db.ref('clients').push({name:d.client, phone:d.phone||'', college:'', dept:'', by:window.currentUser, auto:true, ts:Date.now()});
-    }
-    window.toast('✅ Bill saved! Client auto-added!');
-    window.clearBill();
-  }catch(e){window.toast('❌ '+e.message);}
+  try{await db.ref('bills').push(d); await db.ref('meta').update({billCounter:billCounter+1});window.toast('✅ Bill saved!');window.clearBill();}catch(e){window.toast('❌ '+e.message);}
 };
 
 window.downloadBill = function() {
@@ -646,67 +601,6 @@ window.downloadBill = function() {
   },200);
 };
 
-
-// Download any saved bill from history
-window.downloadSavedBill = function(key) {
-  db.ref('bills/'+key).once('value').then(function(snap){
-    var b = snap.val();
-    if(!b){window.toast('❌ Bill not found!');return;}
-    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
-      +'@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@400;700&display=swap');'
-      +'*{margin:0;padding:0;box-sizing:border-box}body{font-family:Rajdhani,sans-serif;padding:40px;max-width:595px;margin:0 auto;color:#000}'
-      +'.hdr{text-align:center;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:20px}'
-      +'.logo{font-family:Orbitron,monospace;font-size:2rem;font-weight:900}'
-      +'.logo span:first-child{color:#2de2b6}.logo span:last-child{color:#7c3aed}'
-      +'.meta{display:flex;justify-content:space-between;margin:15px 0;font-size:0.9rem}'
-      +'table{width:100%;border-collapse:collapse;margin:15px 0}'
-      +'th{background:#000;color:#fff;padding:8px;text-align:left}td{padding:8px;border-bottom:1px solid #eee}'
-      +'.total{text-align:right;font-size:1.1rem;font-weight:700;margin-top:10px}'
-      +'.footer{text-align:center;margin-top:20px;font-size:0.75rem;color:#888;border-top:1px solid #eee;padding-top:10px}'
-      +'</style></head><body>'
-      +'<div class="hdr"><div class="logo"><span>Hack</span><span>Nest</span></div>'
-      +'<div style="font-size:0.6rem;color:#555;letter-spacing:0.15em">SOLUTIONS</div>'
-      +'<div style="font-size:0.75rem;color:#666">Innovate · Secure · Deliver | IoT & IT Services</div></div>'
-      +'<div class="meta"><div><strong>Bill No:</strong> '+b.no+'<br><strong>Date:</strong> '+b.date+'</div>'
-      +'<div style="text-align:right"><strong>Client:</strong> '+b.client+'<br><strong>Phone:</strong> '+(b.phone||'—')+'</div></div>'
-      +'<table><thead><tr><th>#</th><th>Description</th><th>Amount</th></tr></thead>'
-      +'<tbody><tr><td>1</td><td>'+b.desc+'</td><td>₹'+b.amount+'</td></tr></tbody></table>'
-      +'<div class="total">Total: ₹'+b.amount+'</div>'
-      +(b.notes?'<p style="font-size:0.8rem;color:#666;margin-top:8px">Note: '+b.notes+'</p>':'')
-      +'<div class="footer">HackNest Solutions · CEO: Manoj · Thank you!</div>'
-      +'</body></html>';
-    var blob=new Blob([html],{type:'text/html'});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url; a.download='HackNest-Bill-'+b.no+'.html'; a.click();
-    URL.revokeObjectURL(url);
-    window.toast('⬇ Bill downloaded!');
-  });
-};
-
-// Edit bill - load into form
-window.editBill = function(key) {
-  db.ref('bills/'+key).once('value').then(function(snap){
-    var b = snap.val();
-    if(!b){window.toast('❌ Bill not found!');return;}
-    document.getElementById('bill-no').value = b.no||'';
-    document.getElementById('bill-date').value = b.date||'';
-    document.getElementById('bill-client').value = b.client||'';
-    document.getElementById('bill-phone').value = b.phone||'';
-    document.getElementById('bill-desc').value = b.desc||'';
-    document.getElementById('bill-amount').value = b.amount||'';
-    document.getElementById('bill-cost').value = b.cost||'';
-    document.getElementById('bill-profit').value = b.profit||'';
-    document.getElementById('bill-notes').value = b.notes||'';
-    // Delete old and scroll to form
-    db.ref('bills/'+key).remove();
-    switchTab('bill', null);
-    document.querySelector('.nav-tab').click();
-    window.scrollTo(0,0);
-    window.toast('✏️ Bill loaded for editing! Save when done.');
-  });
-};
-
 window.clearBill = function() {
   ['bill-client','bill-phone','bill-desc','bill-amount','bill-cost','bill-profit','bill-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('bill-preview').style.display='none';
@@ -714,23 +608,18 @@ window.clearBill = function() {
 };
 
 function renderBills(data) {
-  var tbody=document.getElementById('bill-history');
-  var empty=document.getElementById('bill-empty');
+  var tbody = document.getElementById('bill-history');
+  var empty = document.getElementById('bill-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(function(entry){
-    var key=entry[0]; var b=entry[1];
+  tbody.innerHTML = Object.entries(data).reverse().map(([key, b]) => {
     var delCell = window.canEdit(b.by)
-      ? '<button class="btn btn-danger btn-sm" onclick="delItem('bills',''+key+'')">✕</button>'
-      : '<span style="color:var(--text-dim);font-size:0.75rem">👁</span>';
-    var dlBtn='<button class="btn btn-ghost btn-sm" onclick="downloadSavedBill(''+key+'')">⬇</button>';
-    var editBtn = window.canEdit(b.by) ? '<button class="btn btn-ghost btn-sm" onclick="editBill(''+key+'')">✏️</button>' : '';
-    return '<tr><td><span style="color:var(--teal);font-family:Share Tech Mono,monospace">'+b.no+'</span></td><td>'+b.client+'</td><td style="color:var(--text-dim)">'+b.desc+'</td><td style="color:var(--teal)">₹'+b.amount+'</td><td><span class="badge badge-purple">'+(b.by||'—')+'</span></td><td style="color:var(--text-dim)">'+b.date+'</td><td style="display:flex;gap:0.3rem;flex-wrap:wrap">'+dlBtn+editBtn+delCell+'</td></tr>';
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('bills','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td><span style="color:var(--teal);font-family:Share Tech Mono,monospace">${b.no}</span></td><td>${b.client}</td><td style="color:var(--text-dim)">${b.desc}</td><td style="color:var(--teal)">₹${b.amount}</td><td><span class="badge badge-purple">${b.by||'—'}</span></td><td style="color:var(--text-dim)">${b.date}</td><td>${delCell}</td></tr>`;
   }).join('');
 }
-}
 
-// Clients
 window.addClient = async function() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){window.toast('⚠ Enter client name!');return;}
@@ -738,22 +627,19 @@ window.addClient = async function() {
 };
 
 function renderClients(data) {
-  var tbody=document.getElementById('client-list');
-  var empty=document.getElementById('client-empty');
+  var tbody = document.getElementById('client-list');
+  var empty = document.getElementById('client-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  document.getElementById('d-clients').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(function(entry,i){
-    var key=entry[0]; var c=entry[1];
+  document.getElementById('d-clients').textContent = Object.keys(data).length;
+  tbody.innerHTML = Object.entries(data).map(([key, c], i) => {
     var delCell = window.canEdit(c.by)
-      ? '<button class="btn btn-danger btn-sm" onclick="delItem('clients',''+key+'')">✕</button>'
-      : '<span style="color:var(--text-dim);font-size:0.75rem">👁</span>';
-    return '<tr><td style="color:var(--text-dim)">'+(i+1)+'</td><td><strong>'+c.name+'</strong></td><td style="color:var(--text-dim)">'+(c.college||'—')+'</td><td><span class="badge badge-purple">'+(c.dept||'—')+'</span></td><td style="color:var(--text-dim)">'+(c.phone||'—')+'</td><td><span class="badge badge-green">'+(c.by||'—')+'</span></td><td>'+delCell+'</td></tr>';
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('clients','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${c.name}</strong></td><td style="color:var(--text-dim)">${c.college||'—'}</td><td><span class="badge badge-purple">${c.dept||'—'}</span></td><td style="color:var(--text-dim)">${c.phone||'—'}</td><td><span class="badge badge-green">${c.by||'—'}</span></td><td>${delCell}</td></tr>`;
   }).join('');
 }
-}
 
-// Projects
 window.addProject = async function() {
   const name=document.getElementById('p-name').value.trim();
   if(!name){window.toast('⚠ Enter project name!');return;}
@@ -765,26 +651,23 @@ window.updateStatus = async function(key,val) {
 };
 
 function renderProjects(data) {
-  var tbody=document.getElementById('project-list');
-  var empty=document.getElementById('project-empty');
+  var tbody = document.getElementById('project-list');
+  var empty = document.getElementById('project-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  document.getElementById('d-projects').textContent=Object.keys(data).length;
-  tbody.innerHTML=Object.entries(data).map(function(entry,i){
-    var key=entry[0]; var p=entry[1];
+  document.getElementById('d-projects').textContent = Object.keys(data).length;
+  tbody.innerHTML = Object.entries(data).map(([key, p], i) => {
     var statusBadge = p.status==='completed'?'badge-green':p.status==='ongoing'?'badge-yellow':'badge-red';
     var statusCell = window.canEdit(p.by)
-      ? '<select class="btn btn-ghost btn-sm" onchange="updateStatus(''+key+'',this.value)" style="padding:0.25rem 0.5rem"><option value="pending"'+(p.status==='pending'?' selected':'')+'>Pending</option><option value="ongoing"'+(p.status==='ongoing'?' selected':'')+'>Ongoing</option><option value="completed"'+(p.status==='completed'?' selected':'')+'>Completed</option></select>'
-      : '<span class="badge '+statusBadge+'">'+p.status+'</span>';
+      ? `<select class="btn btn-ghost btn-sm" onchange="updateStatus('${key}',this.value)" style="padding:0.25rem 0.5rem"><option value="pending"${p.status==='pending'?' selected':''}>Pending</option><option value="ongoing"${p.status==='ongoing'?' selected':''}>Ongoing</option><option value="completed"${p.status==='completed'?' selected':''}>Completed</option></select>`
+      : `<span class="badge ${statusBadge}">${p.status}</span>`;
     var delCell = window.canEdit(p.by)
-      ? '<button class="btn btn-danger btn-sm" onclick="delItem('projects',''+key+'')">✕</button>'
-      : '<span style="color:var(--text-dim);font-size:0.75rem">👁</span>';
-    return '<tr><td style="color:var(--text-dim)">'+(i+1)+'</td><td><strong>'+p.name+'</strong></td><td style="color:var(--text-dim)">'+p.client+'</td><td style="color:var(--teal)">₹'+p.amount+'</td><td><span class="badge badge-purple">'+p.assigned+'</span></td><td style="color:var(--text-dim)">'+(p.deadline||'—')+'</td><td>'+statusCell+'</td><td>'+delCell+'</td></tr>';
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('projects','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${p.name}</strong></td><td style="color:var(--text-dim)">${p.client}</td><td style="color:var(--teal)">₹${p.amount}</td><td><span class="badge badge-purple">${p.assigned}</span></td><td style="color:var(--text-dim)">${p.deadline||'—'}</td><td>${statusCell}</td><td>${delCell}</td></tr>`;
   }).join('');
 }
-}
 
-// Team
 function renderTeam() {
   document.getElementById('team-grid').innerHTML=TEAM_DATA.map(m=>`<div class="team-card"><div class="team-avatar">${m.init}</div><div class="team-name">${m.name}</div><div class="team-role">${m.role}</div><div style="margin-top:0.5rem"><span class="badge badge-green">Active</span></div></div>`).join('');
 }
@@ -796,21 +679,18 @@ window.assignTask = async function() {
 };
 
 function renderTasks(data) {
-  var tbody=document.getElementById('task-list');
-  var empty=document.getElementById('task-empty');
+  var tbody = document.getElementById('task-list');
+  var empty = document.getElementById('task-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).map(function(entry){
-    var key=entry[0]; var t=entry[1];
+  tbody.innerHTML = Object.entries(data).map(([key, t]) => {
     var doneCell = window.canEdit(t.by)
-      ? '<button class="btn btn-ghost btn-sm" onclick="delItem('tasks',''+key+'')">✓ Done</button>'
-      : '<span style="color:var(--text-dim)">—</span>';
-    return '<tr><td><span class="badge badge-purple">'+t.member+'</span></td><td>'+t.task+'</td><td><span class="badge badge-green">'+(t.by||'—')+'</span></td><td style="color:var(--text-dim)">'+t.date+'</td><td>'+doneCell+'</td></tr>';
+      ? `<button class="btn btn-ghost btn-sm" onclick="delItem('tasks','${key}')">✓ Done</button>`
+      : `<span style="color:var(--text-dim)">—</span>`;
+    return `<tr><td><span class="badge badge-purple">${t.member}</span></td><td>${t.task}</td><td><span class="badge badge-green">${t.by||'—'}</span></td><td style="color:var(--text-dim)">${t.date}</td><td>${doneCell}</td></tr>`;
   }).join('');
 }
-}
 
-// Finance
 window.addTransaction = async function() {
   const amount=parseFloat(document.getElementById('fin-amount').value);
   if(!amount){window.toast('⚠ Enter amount!');return;}
@@ -818,32 +698,29 @@ window.addTransaction = async function() {
 };
 
 function renderFinance(data) {
-  var tbody=document.getElementById('finance-list');
-  var empty=document.getElementById('finance-empty');
-  var arr=data?Object.values(data):[];
-  var income=arr.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-  var expense=arr.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-  var balance=income-expense;
+  var tbody = document.getElementById('finance-list');
+  var empty = document.getElementById('finance-empty');
+  var arr = data ? Object.values(data) : [];
+  var income = arr.filter(t => t.type==='income').reduce((s,t) => s+t.amount,0);
+  var expense = arr.filter(t => t.type==='expense').reduce((s,t) => s+t.amount,0);
+  var balance = income-expense;
   document.getElementById('f-income').textContent='₹'+income.toLocaleString('en-IN');
   document.getElementById('f-expense').textContent='₹'+expense.toLocaleString('en-IN');
-  var balEl=document.getElementById('f-balance');
+  var balEl = document.getElementById('f-balance');
   balEl.textContent='₹'+balance.toLocaleString('en-IN');
-  balEl.style.color=balance>=0?'var(--teal)':'#ef4444';
+  balEl.style.color = balance>=0?'var(--teal)':'#ef4444';
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).reverse().map(function(entry){
-    var key=entry[0]; var t=entry[1];
+  tbody.innerHTML = Object.entries(data).reverse().map(([key, t]) => {
     var delCell = window.canEdit(t.by)
-      ? '<button class="btn btn-danger btn-sm" onclick="delItem('transactions',''+key+'')">✕</button>'
-      : '<span style="color:var(--text-dim);font-size:0.75rem">👁</span>';
-    var amtColor=t.type==='income'?'var(--teal)':'#ef4444';
-    var sign=t.type==='income'?'+':'-';
-    return '<tr><td style="color:var(--text-dim)">'+t.date+'</td><td><span class="badge '+(t.type==='income'?'badge-green':'badge-red')+'">'+t.type+'</span></td><td>'+t.desc+'</td><td style="color:'+amtColor+';font-weight:700">'+sign+'₹'+t.amount.toLocaleString('en-IN')+'</td><td><span class="badge badge-purple">'+(t.by||'—')+'</span></td><td>'+delCell+'</td></tr>';
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('transactions','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    var amtColor = t.type==='income'?'var(--teal)':'#ef4444';
+    var sign = t.type==='income'?'+':'-';
+    return `<tr><td style="color:var(--text-dim)">${t.date}</td><td><span class="badge ${t.type==='income'?'badge-green':'badge-red'}">${t.type}</span></td><td>${t.desc}</td><td style="color:${amtColor};font-weight:700">${sign}₹${t.amount.toLocaleString('en-IN')}</td><td><span class="badge badge-purple">${t.by||'—'}</span></td><td>${delCell}</td></tr>`;
   }).join('');
 }
-}
 
-// Stock
 window.addStock = async function() {
   const name=document.getElementById('st-name').value.trim();
   if(!name){window.toast('⚠ Enter component name!');return;}
@@ -856,20 +733,119 @@ window.useStock = async function(key,currentQty) {
 };
 
 function renderStock(data) {
-  var tbody=document.getElementById('stock-list');
-  var empty=document.getElementById('stock-empty');
+  var tbody = document.getElementById('stock-list');
+  var empty = document.getElementById('stock-empty');
   if(!data){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=Object.entries(data).map(function(entry,i){
-    var key=entry[0]; var s=entry[1];
-    var total=(s.qty*s.price).toLocaleString('en-IN');
-    var low=s.qty<=s.min; var outof=s.qty===0;
-    var statusClass=outof?'badge-red':low?'badge-yellow':'badge-green';
-    var statusText=outof?'OUT OF STOCK':low?'LOW STOCK':'IN STOCK';
-    var qtyColor=outof?'#ef4444':low?'#eab308':'var(--teal)';
+  tbody.innerHTML = Object.entries(data).map(([key, s], i) => {
+    var total = (s.qty*s.price).toLocaleString('en-IN');
+    var low = s.qty<=s.min; var outof=s.qty===0;
+    var statusClass = outof?'badge-red':low?'badge-yellow':'badge-green';
+    var statusText = outof?'OUT OF STOCK':low?'LOW STOCK':'IN STOCK';
+    var qtyColor = outof?'#ef4444':low?'#eab308':'var(--teal)';
     var delCell = window.canEdit(s.by)
-      ? '<button class="btn btn-danger btn-sm" onclick="delItem('stock',''+key+'')">✕</button>'
-      : '<span style="color:var(--text-dim);font-size:0.75rem">👁</span>';
-    return '<tr><td style="color:var(--text-dim)">'+(i+1)+'</td><td><strong>'+s.name+'</strong></td><td><span class="badge badge-purple">'+s.cat+'</span></td><td style="color:'+qtyColor+';font-weight:700">'+s.qty+'</td><td style="color:var(--text-dim)">'+s.min+'</td><td style="color:var(--text-dim)">₹'+s.price+'</td><td style="color:var(--teal)">₹'+total+'</td><td><span class="badge '+statusClass+'">'+statusText+'</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock(''+key+'','+s.qty+')">-1 Use</button></td><td>'+delCell+'</td></tr>';
+      ? `<button class="btn btn-danger btn-sm" onclick="delItem('stock','${key}')">✕</button>`
+      : `<span style="color:var(--text-dim);font-size:0.75rem">👁</span>`;
+    return `<tr><td style="color:var(--text-dim)">${i+1}</td><td><strong>${s.name}</strong></td><td><span class="badge badge-purple">${s.cat}</span></td><td style="color:${qtyColor};font-weight:700">${s.qty}</td><td style="color:var(--text-dim)">${s.min}</td><td style="color:var(--text-dim)">₹${s.price}</td><td style="color:var(--teal)">₹${total}</td><td><span class="badge ${statusClass}">${statusText}</span></td><td><button class="btn btn-ghost btn-sm" onclick="useStock('${key}',${s.qty})">-1 Use</button></td><td>${delCell}</td></tr>`;
   }).join('');
 }
+
+// --- NEW CHAT FUNCTIONS ---
+window.sendChat = async function() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+  try {
+    await db.ref('chat').push({
+      user: window.currentUser,
+      init: window.currentInit,
+      msg: msg,
+      time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'}),
+      ts: Date.now()
+    });
+    input.value = '';
+  } catch(e) { window.toast('❌ ' + e.message); }
+};
+
+function renderChat(data) {
+  const box = document.getElementById('chat-box');
+  if(!data) { box.innerHTML = '<div class="empty-state"><span class="empty-icon">💬</span>No messages yet. Say hi! 👋</div>'; return; }
+  box.innerHTML = Object.values(data).map(c => {
+    const isMine = c.user === window.currentUser;
+    return `<div class="chat-msg ${isMine ? 'mine' : ''}">
+      <div class="chat-avatar">${c.init}</div>
+      <div>
+        <div class="chat-name">${c.user}</div>
+        <div class="chat-bubble"><div class="chat-text">${c.msg}</div></div>
+        <div class="chat-time">${c.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+// --- NEW ATTENDANCE FUNCTIONS ---
+function initAttendanceMark() {
+  const grid = document.getElementById('attendance-mark-grid');
+  grid.innerHTML = MEMBERS.map(m => `
+    <div style="background:var(--glass);padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border)">
+      <div style="font-weight:700;margin-bottom:0.5rem">${m}</div>
+      <select id="att-mark-${m.replace(/\s+/g, '')}" style="padding:0.25rem;font-size:0.8rem;width:100%">
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+        <option value="Leave">Leave</option>
+      </select>
+    </div>
+  `).join('');
+}
+
+window.submitAttendance = async function() {
+  const date = new Date().toLocaleDateString('en-IN');
+  const updates = {};
+  MEMBERS.forEach(m => {
+    const val = document.getElementById('att-mark-' + m.replace(/\s+/g, '')).value;
+    const key = date.replace(/\//g,'-') + '-' + m.replace(/\s+/g, '');
+    updates[key] = { date, member: m, status: val, by: window.currentUser, ts: Date.now() };
+  });
+  try {
+    await db.ref('attendance').update(updates);
+    window.toast('✅ Attendance saved!');
+  } catch(e) { window.toast('❌ ' + e.message); }
+};
+
+function renderAttendance(data) {
+  allAttendance = data || {};
+  filterAttendance();
+}
+
+window.filterAttendance = function() {
+  const tbody = document.getElementById('attendance-list');
+  const empty = document.getElementById('attendance-empty');
+  const filter = document.getElementById('att-filter').value;
+  
+  if(!allAttendance || Object.keys(allAttendance).length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  let arr = Object.values(allAttendance).sort((a,b) => b.ts - a.ts);
+  if(filter !== 'all') {
+    arr = arr.filter(a => a.member === filter);
+  }
+  
+  tbody.innerHTML = arr.map(a => {
+    const statusClass = a.status === 'Present' ? 'badge-green' : a.status === 'Absent' ? 'badge-red' : 'badge-yellow';
+    return `<tr>
+      <td style="color:var(--text-dim)">${a.date}</td>
+      <td><strong>${a.member}</strong></td>
+      <td><span class="badge ${statusClass}">${a.status}</span></td>
+      <td><span class="badge badge-purple">${a.by}</span></td>
+    </tr>`;
+  }).join('');
+};
+
+</script>
+</body>
+</html>
