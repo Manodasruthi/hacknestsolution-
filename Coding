@@ -1,0 +1,209 @@
+#include<stdio.h>
+#include<string.h>
+#define max 100
+struct Student {
+    int Id;
+    char name[20];
+    char dept[10];
+    int age;
+    int year;
+    char phone[12];
+    int m1,m2,m3;
+};
+int count=0;
+struct Student students[max];
+
+int findId(int id){
+    for(int i=0;i<count;i++){
+        if(students[i].Id==id){
+            return i;
+        }
+    }
+    return -1;
+}
+void addStudent(){
+    struct Student s;
+    printf("Enter ID :");
+    scanf("%d",&s.Id);
+    if(findId(s.Id)!=-1){
+        printf("ID already Existed");
+        return;
+    }
+    getchar();
+    printf("Enter Name :");
+    fgets(s.name,sizeof(s.name),stdin);
+    s.name[strcspn(s.name,"\n")]='\0';
+    printf("Enter the Department :");
+    fgets(s.dept,sizeof(s.dept),stdin);
+    s.dept[strcspn(s.dept,"\n")]='\0';
+    printf("Enter the Age :");
+    scanf("%d",&s.age);
+    if(s.age<18 || s.age>50){
+        printf("Age is not Valid");
+        return;
+    }
+    printf("Enter the Year :");
+    scanf("%d",&s.year);
+    getchar();
+    printf("Enter the Phone Number :");
+    scanf("%s",s.phone);
+    getchar();
+    printf("Enter the Marks :");
+    scanf("%d%d%d",&s.m1,&s.m2,&s.m3);
+    students[count]=s;
+    count++;
+    printf("Student Added Successfully...");
+}
+void displayspecific(struct Student s){
+     printf("\n-----------------------------\n");
+        printf("ID           : %d\n",s.Id);
+        printf("Name         : %s\n",s.name);
+        printf("Department   : %s\n",s.dept);
+        printf("Age          : %d\n",s.age);
+        printf("Year         : %d\n",s.year);
+        printf("Phone Number : %s\n",s.phone);
+        printf("Marks        : %d %d %d\n",s.m1,s.m2,s.m3);
+  
+}
+void displayStudent(){
+    if(count==0){
+        printf("No record Found!!");
+        return;
+    }
+    for(int i=0;i<count;i++){
+        displayspecific(students[i]);
+    }
+}
+void search(){
+    if(count==0){
+        printf("No Records found");
+        return;
+    }
+    int choice,index,id;
+    char name[20];
+    printf("1.search by ID \n2.search by name\nEnter the choice :");
+    scanf("%d",&choice);
+    if(choice==1){
+        if(count==0){
+            printf("No Student Records");
+            return;
+        }
+        printf("Enter ID to search :");
+        scanf("%d",&id);
+        index=findId(id);
+        displayspecific(students[index]);
+    }
+    else if(choice==2){
+        if(count==0){
+            printf("No Student Records");
+            return;
+        }
+        getchar();
+        printf("Enter name to search :");
+        fgets(name,sizeof(name),stdin);
+        name[strcspn(name,"\n")]='\0';
+        for(index=0;index<count;index++){
+            if(strcmp(students[index].name,name)==0){
+                break;
+            }
+        }
+        if(index==count){
+            printf("Invalid name");
+            return;
+        }
+        printf("Student Found\n");
+        displayspecific(students[index]);
+    }
+    else{
+        printf("Student Not Student");
+        return;
+    }
+}
+void deleteStudent(){
+    if(count==0){
+        printf("No Records Found");
+        return;
+    }
+    int id;
+    printf("Enter the ID to delete :");
+    scanf("%d",&id);
+    int index=findId(id);
+    if(index==-1){
+        printf("Student Not Found!!");
+        return;
+    }
+    for(int i=0;i<count-1;i++){
+        students[i]=students[i+1];
+    }
+    count--;
+    printf("Student Deleted Successfully..");
+}
+void updateStudent(){
+    if(count==0){
+        printf("No Records Found");
+        return;
+    }
+    int choice;
+    int id;
+    printf("Enter the ID to update :");
+    scanf("%d",&id);
+    int index=findId(id);
+    if(index==-1){
+        printf("Student Not Found!!");
+    }
+    printf("What do you want to Update ?\n1.Name\n2.Department\n3.Age\n4.Year\n5.Phone Number\n5.Marks\nEnter your choice to update :");
+    scanf("%d",&choice);
+    switch(choice){
+        case 1:
+        char newname[20];
+        printf("Enter New name :");
+        
+    }
+    printf("Enter New Department :");
+    scanf("%s",students[index]);
+    printf("Updated Successfully!!");
+}
+int main(){
+    int c;
+    while(1){
+        printf("\n1.Add Student\n2.Display Student\n3.Delete Student\n4.Update Student\n5.Search student\n6.Exit\n");
+        printf("Enter Your Choice :");
+        scanf("%d",&c);
+        switch(c){
+            case 1:
+            {
+                addStudent();
+                break;
+            }
+            case 2:
+            {
+                displayStudent();
+                break;
+            }
+            case 3:
+            {
+                deleteStudent();
+                break;
+            }
+            case 4:
+            {
+                updateStudent();
+                break;
+            }
+            case 5:
+            {
+                search();
+                break;
+            }
+            case 6:
+            {
+                printf("Thank You!!");
+                return 0;
+            }
+            default:
+            {
+                printf("Invalid Choice");
+            }
+        }
+    }
+}
